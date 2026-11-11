@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>/build — how I build</title>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@500;800&display=swap" rel="stylesheet">
+<style>
+:root{--h:75;--bg:#f6f5f0;--fg:#16161a;--mut:#62626b;--card:rgba(255,255,255,.82);--bd:#d6d4c8;--ac:hsl(var(--h) 80% 28%);--acbg:hsl(var(--h) 70% 84%);
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:0}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0b0b0e;--fg:#f1f0ea;--mut:#8d8d96;--card:rgba(22,22,27,.82);--bd:#2a2a31;--ac:hsl(var(--h) 90% 62%);--acbg:hsl(var(--h) 60% 14%);color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#0b0b0e;--fg:#f1f0ea;--mut:#8d8d96;--card:rgba(22,22,27,.82);--bd:#2a2a31;--ac:hsl(var(--h) 90% 62%);--acbg:hsl(var(--h) 60% 14%);color-scheme:dark}
+*{box-sizing:border-box}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:Arial,Helvetica,sans-serif;line-height:1.55}
+#bg{position:fixed;inset:0;z-index:0;pointer-events:none}
+#bar{position:fixed;top:env(safe-area-inset-top,0px);left:0;height:3px;width:0;background:var(--ac);z-index:30}
+.wrap{position:relative;z-index:1;max-width:1000px;margin:0 auto;padding:20px 22px 0}
+.eyebrow{font:13px ui-monospace,Menlo,monospace;color:var(--ac);letter-spacing:.08em}
+h1{margin:40px 0 16px;font:800 clamp(56px,12vw,140px)/.88 'Bricolage Grotesque','Arial Narrow',system-ui,sans-serif;letter-spacing:-.035em}
+h1 em{display:block;font-style:normal;color:var(--ac)}
+.lead{color:var(--mut);font-size:18px;max-width:560px;margin:0 0 10px}
+.now{font:14px ui-monospace,Menlo,monospace;color:var(--mut);margin:0 0 34px}
+.now b{color:var(--ac);font-weight:500;animation:fi .5s}
+@keyframes fi{from{opacity:0;transform:translateY(6px)}}
+.foot{max-width:70ch}
+.ctl{display:flex;flex-wrap:wrap;gap:14px 30px;margin-bottom:26px;align-items:center}
+.grp{display:flex;gap:6px;flex-wrap:wrap}
+.grp button{background:var(--card);border:1px solid var(--bd);color:var(--fg);padding:8px 15px;border-radius:99px;font:inherit;font-size:14px;cursor:pointer;transition:.2s}
+.grp button:hover{border-color:var(--ac)}
+.grp button[aria-selected="true"]{background:var(--ac);color:var(--bg);border-color:var(--ac)}
+#sw{gap:16px}
+@media (min-width:720px){#sw{margin-left:auto}}
+#sw button{width:42px;height:42px;padding:0;border-radius:50%}
+#sw button[aria-selected="true"]{outline:2px solid var(--fg);outline-offset:2px}
+.intro{color:var(--mut);margin:0 0 36px;max-width:560px}
+#sc.h{overflow-x:auto;scroll-snap-type:x proximity;padding-bottom:18px}
+#tl{position:relative}
+.l-line{max-width:720px}
+.l-horiz{width:max-content}
+#steps{position:relative}
+#svg{position:absolute;left:0;top:0;width:100%;height:100%;overflow:visible;pointer-events:none}
+#p0{fill:none;stroke:var(--bd);stroke-width:2}
+#p1{fill:none;stroke:var(--ac);stroke-width:3;stroke-linecap:round}
+#dot{position:absolute;left:0;top:0;width:16px;height:16px;margin:-8px 0 0 -8px;border-radius:50%;background:var(--ac);box-shadow:0 0 0 7px var(--acbg),0 0 26px var(--ac);z-index:3;pointer-events:none}
+#nodes i{position:absolute;width:14px;height:14px;margin:-7px 0 0 -7px;border-radius:50%;background:var(--bg);border:2px solid var(--bd);transition:.4s;z-index:2}
+#nodes i.on{background:var(--ac);border-color:var(--ac)}
+.l-line .step{margin:0 0 34px 46px}
+.l-wind .step{width:calc(50% - 76px);margin:0 0 44px auto}
+.l-wind .step:nth-child(even){margin:0 auto 44px 0}
+.l-horiz #steps{display:flex;gap:22px;padding:78px 20px 0}
+.l-horiz .step{width:min(80vw,350px);flex:none;scroll-snap-align:center;margin:0}
+.step{opacity:.22;transform:translateY(16px);transition:opacity .6s,transform .6s}
+.step.on{opacity:1;transform:none}
+.card{position:relative;background:var(--card);backdrop-filter:blur(8px);border:1px solid var(--bd);border-radius:16px;padding:20px;overflow:hidden;transition:.3s}
+.card:hover{border-color:var(--ac);transform:translateY(-3px)}
+.big{position:absolute;right:14px;top:6px;font:700 48px/1 Arial,Helvetica,sans-serif;color:var(--acbg);opacity:.9}
+.card h3{margin:0 0 6px;font-size:22px;position:relative}
+.card p{margin:0 0 10px;color:var(--mut);font-size:15px;position:relative}
+.ask{border-left:2px solid var(--ac);padding-left:12px;font-size:14px;margin:10px 0}
+.out{font-size:13px;margin:10px 0 0}.out b{color:var(--ac);font-weight:500}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:12px}
+.chip{font:12px ui-monospace,Menlo,monospace;padding:3px 9px;border-radius:99px;background:var(--acbg);color:var(--ac)}
+.loop{font:12px ui-monospace,Menlo,monospace;color:var(--ac);margin-top:10px}
+.hn{display:none;gap:8px;margin-top:8px}
+.hn button{background:var(--card);border:1px solid var(--bd);color:var(--fg);width:40px;height:40px;border-radius:50%;font-size:18px;cursor:pointer}
+.foot{margin:60px 0 16px;color:var(--mut);font-size:14px;border-top:1px solid var(--bd);padding-top:20px}
+/* mini visuals */
+.v{margin:14px 0 4px;min-height:92px;border:1px solid var(--bd);border-radius:10px;padding:12px;background:rgba(127,127,127,.06);overflow:hidden;position:relative}
+.v *{animation-play-state:paused}.step.on .v *{animation-play-state:running}
+.v-spark{height:68px;position:relative}
+.v-spark:after{content:"";position:absolute;left:50%;top:50%;width:10px;height:10px;margin:-5px;border-radius:50%;background:var(--ac)}
+.v-spark i{position:absolute;left:50%;top:50%;border:2px solid var(--ac);border-radius:50%;transform:translate(-50%,-50%);animation:sp 2.4s infinite;opacity:0}
+.v-spark i:nth-child(2){animation-delay:.8s}.v-spark i:nth-child(3){animation-delay:1.6s}
+@keyframes sp{from{width:8px;height:8px;opacity:1}to{width:68px;height:68px;opacity:0}}
+.v-chat{display:flex;flex-direction:column;gap:6px;font-size:12px}
+.v-chat b{font-weight:400;background:var(--acbg);color:var(--ac);padding:4px 10px;border-radius:12px;align-self:flex-start}
+.v-chat b.r{align-self:flex-end;background:var(--bd);color:var(--fg)}
+.v-chat u{display:inline-block;width:5px;height:5px;margin:0 2px;border-radius:50%;background:var(--ac);animation:bn 1s infinite}
+.v-chat u:nth-child(2){animation-delay:.15s}.v-chat u:nth-child(3){animation-delay:.3s}
+@keyframes bn{50%{transform:translateY(-4px)}}
+.v-type{font:12px/1.7 ui-monospace,Menlo,monospace;color:var(--ac)}
+.v-type p{margin:0;width:0;overflow:hidden;white-space:nowrap;animation:ty 2.6s steps(var(--n)) var(--d) infinite alternate}
+@keyframes ty{to{width:calc(var(--n)*1ch)}}
+.v-wire{display:grid;grid-template:14px 1fr 1fr/1fr 2fr;gap:6px;height:80px}
+.v-wire i{border:1.5px solid var(--bd);border-radius:5px;animation:wf 3.6s infinite}
+.v-wire .a{grid-column:1/3}.v-wire .b{grid-row:2/4}.v-wire .c{animation-delay:.5s}.v-wire .d{animation-delay:1s}.v-wire .b{animation-delay:.25s}
+@keyframes wf{0%,15%{background:transparent;border-color:var(--bd)}35%,85%{background:var(--acbg);border-color:var(--ac)}100%{background:transparent;border-color:var(--bd)}}
+.v-code i{display:block;height:6px;margin:6px 0;border-radius:3px;background:var(--ac);width:var(--w);animation:cd 2.8s var(--d) infinite;opacity:0}
+@keyframes cd{0%{opacity:0;transform:translateX(-10px)}20%,80%{opacity:.75;transform:none}100%{opacity:0}}
+.v-db svg{width:100%;height:76px}.v-db rect{fill:var(--acbg);stroke:var(--ac)}.v-db line{stroke:var(--ac);stroke-width:1.5;stroke-dasharray:4 4;animation:fl 1s linear infinite}
+@keyframes fl{to{stroke-dashoffset:-8}}
+.v-cube{perspective:300px;height:76px;display:grid;place-items:center}
+.v-cube div{width:44px;height:44px;position:relative;transform-style:preserve-3d;animation:rt 7s linear infinite}
+.v-cube i{position:absolute;inset:0;border:1.5px solid var(--ac);background:var(--acbg);opacity:.85}
+.v-cube i:nth-child(1){transform:translateZ(22px)}.v-cube i:nth-child(2){transform:rotateY(90deg) translateZ(22px)}.v-cube i:nth-child(3){transform:rotateY(180deg) translateZ(22px)}.v-cube i:nth-child(4){transform:rotateY(-90deg) translateZ(22px)}.v-cube i:nth-child(5){transform:rotateX(90deg) translateZ(22px)}.v-cube i:nth-child(6){transform:rotateX(-90deg) translateZ(22px)}
+@keyframes rt{to{transform:rotateX(360deg) rotateY(360deg)}}
+.v-run{font:12px ui-monospace,Menlo,monospace;color:var(--ac)}
+.v-run span{animation:bl 1.4s infinite}@keyframes bl{50%{opacity:.3}}
+.v-run div{display:flex;gap:7px;align-items:flex-end;height:54px;margin-top:6px}
+.v-run i{flex:1;background:var(--ac);border-radius:4px 4px 0 0;animation:gr 2.4s ease-out infinite alternate;height:20%}
+.v-run i:nth-child(2){animation-delay:.2s}.v-run i:nth-child(3){animation-delay:.4s}.v-run i:nth-child(4){animation-delay:.6s}
+@keyframes gr{to{height:100%}}
+.v-board{display:flex;align-items:center;gap:8px;color:var(--mut);height:66px}
+.v-board i{flex:1;height:100%;border:1.5px solid var(--bd);border-radius:6px;animation:wf 3s infinite}
+.v-board i:nth-of-type(2){animation-delay:1s}.v-board i:nth-of-type(3){animation-delay:2s}
+.v-pal{display:flex;gap:8px;justify-content:center;height:66px;align-items:center}
+.v-pal i{width:30px;height:48px;border-radius:9px;animation:fp 1.8s ease-in-out infinite alternate}
+@keyframes fp{to{transform:translateY(-10px)}}
+.v-curve svg{width:100%;height:76px}.v-curve path{fill:none;stroke:var(--bd);stroke-width:2}.v-curve circle{fill:var(--ac)}
+@media (max-width:719px){.wrap{width:100%;padding:20px 16px 0}.ctl{column-gap:16px}#sw{gap:8px}#sw button{width:30px;height:30px}.l-line .step{width:auto;margin:0 0 34px 24px!important}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<canvas id="bg"></canvas><div id="bar"></div>
+<div class="wrap">
+  <div class="eyebrow">/build</div>
+  <h1>How I <em>build it.</em></h1>
+  <p class="lead">Every project starts as a dot. Follow it from idea to something running, and see the decisions I make on the way.</p>
+  <p class="now">right now: <b id="w">designing a product</b></p>
+  <div class="ctl">
+    <div class="grp" id="tabs" role="tablist"></div>
+    <div class="grp" id="sw"></div>
+  </div>
+  <p class="intro" id="intro"></p>
+  <div id="sc"><div id="tl"><svg id="svg"><path id="p0"/><path id="p1"/></svg><div id="nodes"></div><div id="dot"></div><div id="steps"></div></div></div>
+  <div class="foot">Tools change every few months. The order of thinking does not: idea, why, shape, build, test.</div>
+</div>
+<script>
+const F=[
+{id:"product",label:"Product & app",intro:"How I take a site or app from a vague idea to something running: product, design and code.",steps:[
+{t:"The idea",v:"spark",d:"A single dot. One sentence on what this is and who it is for.",ask:"What problem does this remove for someone?",tools:["notes"],out:"a one-line problem statement"},
+{t:"Vision & discussion",v:"chat",d:"I talk it through: how it should feel, what the benefit is, and what I will cut to keep it focused.",ask:"What is the one thing it must do well?",tools:["whiteboard","chat"],out:"benefit list and a cut list"},
+{t:"The brief",v:"type",l:["> screens: home, detail, profile","> feel: calm, fast, bold","> must do: one thing well"],d:"I turn the vision into a plain list of what I want to see. This becomes the prompt.",tools:["prompt brief"],out:"a prompt ready to paste"},
+{t:"Design with AI",v:"wire",d:"I paste the brief into an AI design tool and get a wireframe or starting point in minutes.",tools:["Stitch","Lovable","v0"],loop:"↺ like it? continue. Not yet? refine the brief, regenerate.",out:"a wireframe I can react to"},
+{t:"Code it for real",v:"code",d:"I take the start and work in the code myself: structure, logic, running it, testing it, fixing what breaks.",ask:"Does it work, and do I understand why?",tools:["editor","browser","tests"],out:"running locally, tests passing"},
+{t:"When I get stuck",v:"type",l:["> why does this crash?","> fix it, keep my structure","✓ diff reviewed by me"],d:"I bring in an AI code editor for the parts I need fast, then I review every change.",tools:["Cursor"],out:"unblocked in minutes"},
+{t:"It runs",v:"run",d:"Design, code and product meet. The app is live and every decision above is traceable.",out:"a working app"}]},
+{id:"design",label:"Design",intro:"How I design: from references and feeling to a system that holds together.",steps:[
+{t:"Research & references",v:"chat",d:"I collect what the best products do, and what users complain about, before drawing anything.",ask:"What already exists and where does it fail?",tools:["references","competitors"],out:"a folder of references with notes"},
+{t:"Moodboard & palette",v:"pal",d:"I choose the feeling first: colour, contrast, texture. Words before pixels.",tools:["moodboard"],out:"three adjectives and a palette"},
+{t:"Type & layout system",v:"type",l:["font: display + text","scale: 12 14 18 28 48","grid: 12 columns"],d:"Typefaces, a size scale and a grid, so every screen is consistent by default.",tools:["tokens"],out:"a small design system"},
+{t:"Wireframe",v:"wire",d:"Structure only. I test where things live and what the user does first.",tools:["Stitch","pen & paper"],out:"low-fi flow of every screen"},
+{t:"Hi-fi & states",v:"board",d:"I apply the system, then design the empty, loading, error and success states most people skip.",tools:["Figma"],out:"polished screens with all states"},
+{t:"Prototype & motion",v:"curve",d:"I add transitions and easing so it feels alive, then click through it like a user.",tools:["prototype","easing"],out:"a clickable prototype"},
+{t:"Handoff to code",v:"code",d:"Tokens, spacing and components named so they map straight to code.",out:"specs that match the build"}]},
+{id:"motion",label:"Motion & 3D",intro:"How I make animated 2D and 3D pieces, from storyboard to final motion.",steps:[
+{t:"The concept",v:"spark",d:"What should the viewer feel in the first two seconds? That sets everything else.",ask:"What is the one moment this is about?",out:"a one-line concept"},
+{t:"Storyboard",v:"board",d:"Rough frames for camera, pacing and style. Cheap to change now, expensive later.",tools:["sketches","references"],out:"3 to 6 key frames"},
+{t:"Generate 3D assets",v:"cube",d:"I create models from text or image prompts, then pick the ones that fit the style.",tools:["Meshy AI"],loop:"↺ not right? adjust the prompt and generate again.",out:"a set of usable 3D models"},
+{t:"Materials & lighting",v:"pal",d:"I fix scale and orientation, then set colour, materials and light so the scene has mood.",tools:["3D editor"],out:"a scene that looks right still"},
+{t:"Animate",v:"curve",d:"I place the camera and animate with timing and easing. This is where it gets personality.",ask:"Does it feel natural or mechanical?",tools:["timeline","easing curves"],out:"the core animation"},
+{t:"Export & check",v:"run",d:"Export for web or video, and check it stays smooth on a real device.",out:"a file that ships"}]},
+{id:"agent",label:"Agent-driven",intro:"How I set up an AI coding agent so it builds in my order, by my rules.",steps:[
+{t:"The idea",v:"spark",d:"Same dot. I know what I am building before I open any tool.",out:"a clear goal"},
+{t:"Write agent.md",v:"type",l:["# agent.md","stack: next + postgres","rule: small steps, ask first"],d:"I write the agent’s instructions: stack, conventions, what to build and what not to touch.",ask:"What would a new teammate need on day one?",tools:["agent.md"],out:"a rulebook the agent follows"},
+{t:"Database first",v:"db",d:"Before any screen, I decide what data exists and how it connects: tables, relations, rules.",tools:["schema","SQL"],out:"a schema I trust"},
+{t:"Then design",v:"wire",d:"With the data shape clear, the interface follows it. The agent gets a target to build toward.",tools:["Stitch","v0"],out:"screens mapped to data"},
+{t:"Agent codes",v:"code",d:"The agent builds against agent.md, the schema and the design, in small steps.",tools:["coding agent"],out:"working features"},
+{t:"Review & test",v:"type",l:["$ run tests","✗ 1 failed, fixing","✓ all passing"],d:"I read the changes and run the tests. The agent is fast, I am the judge.",loop:"↺ wrong? update agent.md so it never repeats it.",out:"code I understand"},
+{t:"Ship",v:"run",d:"A repeatable flow: rules, data, design, code.",out:"a live product"}]}];
+const V={spark:()=>'<div class="v-spark"><i></i><i></i><i></i></div>',
+chat:()=>'<div class="v-chat"><b>what if…?</b><b class="r">who needs it?</b><b><u></u><u></u><u></u></b></div>',
+type:l=>'<div class="v-type">'+l.map((t,i)=>`<p style="--d:${i*.7}s;--n:${t.length}">${h(t)}</p>`).join('')+'</div>',
+wire:()=>'<div class="v-wire"><i class="a"></i><i class="b"></i><i class="c"></i><i class="d"></i></div>',
+code:()=>'<div class="v-code">'+[60,85,40,70,55,90,35].map((w,i)=>`<i style="--w:${w}%;--d:${i*.25}s"></i>`).join('')+'</div>',
+db:()=>'<div class="v-db"><svg viewBox="0 0 300 76"><line x1="80" y1="38" x2="120" y2="38"/><line x1="180" y1="38" x2="220" y2="38"/><rect x="10" y="14" width="70" height="48" rx="6"/><rect x="115" y="14" width="70" height="48" rx="6"/><rect x="220" y="14" width="70" height="48" rx="6"/></svg></div>',
+cube:()=>'<div class="v-cube"><div><i></i><i></i><i></i><i></i><i></i><i></i></div></div>',
+run:()=>'<div class="v-run"><span>● live</span><div><i></i><i></i><i></i><i></i></div></div>',
+board:()=>'<div class="v-board"><i></i>→<i></i>→<i></i></div>',
+pal:()=>'<div class="v-pal">'+[0,40,90,160,210].map((o,i)=>`<i style="background:hsl(calc(var(--h) + ${o}) 70% 55%);animation-delay:${i*.2}s"></i>`).join('')+'</div>',
+curve:()=>'<div class="v-curve"><svg viewBox="0 0 300 76"><path d="M10 66 C120 66 160 10 290 10"/><circle r="6"><animateMotion dur="2.4s" repeatCount="indefinite" path="M10 66 C120 66 160 10 290 10"/></circle></svg></div>'};
+const $=id=>document.getElementById(id),tabs=$('tabs'),steps=$('steps'),nodes=$('nodes'),tl=$('tl'),sc=$('sc'),dot=$('dot'),p0=$('p0'),p1=$('p1');
+let cur,pts=[],L=0,col='#c6f24a';
+const h=s=>s.replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c])),pad=n=>String(n).padStart(2,'0'),mode=()=>innerWidth<720?'line':'wind';
+function show(id){
+  cur=F.find(f=>f.id===id);
+  [...tabs.children].forEach(b=>b.setAttribute('aria-selected',b.dataset.id===id));
+  $('intro').textContent=cur.intro;
+  steps.innerHTML=cur.steps.map((s,i)=>`<div class="step"><div class="card"><span class="big">${pad(i+1)}</span><h3>${h(s.t)}</h3><p>${h(s.d)}</p>${s.ask?`<div class="ask">${h(s.ask)}</div>`:''}<div class="v">${V[s.v](s.l)}</div>${s.out?`<div class="out"><b>→ you get:</b> ${h(s.out)}</div>`:''}${s.tools?`<div class="chips">${s.tools.map(t=>`<span class="chip">${h(t)}</span>`).join('')}</div>`:''}${s.loop?`<div class="loop">${h(s.loop)}</div>`:''}</div></div>`).join('');
+  nodes.innerHTML=cur.steps.map(()=>'<i></i>').join('');
+  try{history.replaceState(null,'','#'+id)}catch(e){}
+  sc.scrollLeft=0;layout();
+}
+function layout(){
+  const m=mode();tl.className='l-'+m;sc.className='';
+  const S=[...steps.children],W=tl.clientWidth;
+  pts=S.map((s,i)=>m==='horiz'?[s.offsetLeft+s.offsetWidth/2,22+(i%2)*16]:m==='wind'?[W/2+(i%2?44:-44),s.offsetTop+28]:[14,s.offsetTop+28]);
+  let d='M'+pts[0];
+  for(let i=1;i<pts.length;i++){const a=pts[i-1],b=pts[i],mx=(a[0]+b[0])/2,my=(a[1]+b[1])/2;d+=m==='horiz'?`C${mx},${a[1]} ${mx},${b[1]} ${b}`:`C${a[0]},${my} ${b[0]},${my} ${b}`}
+  p0.setAttribute('d',d);p1.setAttribute('d',d);L=p1.getTotalLength();p1.style.strokeDasharray=L;
+  [...nodes.children].forEach((e,i)=>{e.style.left=pts[i][0]+'px';e.style.top=pts[i][1]+'px'});
+  update();
+}
+function update(){
+  if(!pts.length)return;const m=mode(),n=pts.length;let p,ok;
+  if(m==='horiz'){const r=sc.scrollLeft+sc.clientWidth*.5,a=pts[0][0],z=pts[n-1][0];p=(r-a)/(z-a);ok=i=>pts[i][0]<=r}
+  else{const r=innerHeight*.6-tl.getBoundingClientRect().top,a=pts[0][1],z=pts[n-1][1];p=(r-a)/(z-a);ok=i=>pts[i][1]<=r}
+  p=Math.min(1,Math.max(0,p));const q=p1.getPointAtLength(L*p);
+  dot.style.left=q.x+'px';dot.style.top=q.y+'px';p1.style.strokeDashoffset=L*(1-p);
+  [...steps.children].forEach((s,i)=>{const o=ok(i);s.classList.toggle('on',o);nodes.children[i].classList.toggle('on',o)});
+  $('bar').style.width=(scrollY/Math.max(1,document.documentElement.scrollHeight-innerHeight)*100)+'%';
+}
+F.forEach(f=>{const b=document.createElement('button');b.role='tab';b.dataset.id=f.id;b.textContent=f.label;b.onclick=()=>show(f.id);tabs.appendChild(b)});
+[75,190,330,35].forEach((v,i)=>{const b=document.createElement('button');b.style.background=`hsl(${v} 90% 60%)`;b.setAttribute('aria-label','Accent colour '+(i+1));b.setAttribute('aria-selected',i===0);b.onclick=()=>{document.documentElement.style.setProperty('--h',v);[...$('sw').children].forEach(x=>x.setAttribute('aria-selected',x===b));readCol()};$('sw').appendChild(b)});
+addEventListener('scroll',update,{passive:true});sc.addEventListener('scroll',update,{passive:true});addEventListener('resize',()=>{rs();layout()});
+new ResizeObserver(()=>layout()).observe(steps);
+const W=["designing a product","animating in 3D","briefing an AI agent","shipping an app"];let wi=0;
+setInterval(()=>{wi=(wi+1)%W.length;const e=$('w');e.textContent=W[wi];e.style.animation='none';e.offsetWidth;e.style.animation=''},2400);
+/* background particles */
+const cv=$('bg'),cx=cv.getContext('2d');let P=[],mx=-999,my=-999,fr=0;
+function readCol(){col=getComputedStyle(document.documentElement).getPropertyValue('--ac').trim()||col}
+function rs(){cv.width=innerWidth;cv.height=innerHeight;P=Array.from({length:Math.min(70,innerWidth/14|0)},()=>({x:Math.random()*cv.width,y:Math.random()*cv.height,vx:(Math.random()-.5)*.3,vy:(Math.random()-.5)*.3}))}
+addEventListener('pointermove',e=>{mx=e.clientX;my=e.clientY});
+function draw(){
+  if(fr++%90===0)readCol();
+  cx.clearRect(0,0,cv.width,cv.height);cx.fillStyle=cx.strokeStyle=col;
+  P.forEach((a,i)=>{a.x=(a.x+a.vx+cv.width)%cv.width;a.y=(a.y+a.vy+cv.height)%cv.height;
+    cx.globalAlpha=.5;cx.beginPath();cx.arc(a.x,a.y,1.6,0,7);cx.fill();
+    const dm=Math.hypot(a.x-mx,a.y-my);if(dm<160){cx.globalAlpha=(1-dm/160)*.6;cx.beginPath();cx.moveTo(a.x,a.y);cx.lineTo(mx,my);cx.stroke()}
+    for(let j=i+1;j<P.length;j++){const b=P[j],d=Math.hypot(a.x-b.x,a.y-b.y);if(d<110){cx.globalAlpha=(1-d/110)*.18;cx.beginPath();cx.moveTo(a.x,a.y);cx.lineTo(b.x,b.y);cx.stroke()}}});
+  if(!matchMedia('(prefers-reduced-motion:reduce)').matches)requestAnimationFrame(draw)
+}
+rs();readCol();draw();
+const st=location.hash.slice(1);show(F.some(f=>f.id===st)?st:'product');
+document.fonts&&document.fonts.ready.then(layout);
+</script>
+</body>
+</html>

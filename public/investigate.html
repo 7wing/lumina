@@ -1,0 +1,435 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:0}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>/investigate</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@700;900&family=IBM+Plex+Mono:wght@400;500&family=Public+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* Layout concept: a case file. A sticky index of four fields on the left. One field open at a time:
+   thesis, order of work, a working bench, a ledger of stages, and a stamped verdict. */
+:root{
+  --bg:#e6ecec;
+  --surface:#f5f8f8;
+  --ink:#0e1b21;
+  --mut:#51636a;
+  --line:#bccacd;
+  --accent:#1d3bd4;
+  --accent-soft:#d3dbfb;
+  --ok:#14785a;
+  --ok-soft:#cdeadf;
+  --bad:#c42a2a;
+  --bad-soft:#f6d3d3;
+  --f-display:'Big Shoulders Display','Arial Narrow',Impact,sans-serif;
+  --f-body:'Public Sans',system-ui,-apple-system,'Segoe UI',sans-serif;
+  --f-mono:'IBM Plex Mono',ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#0b1215;--surface:#121c20;--ink:#e4eced;--mut:#8a9ca2;--line:#26373d;
+    --accent:#8da0ff;--accent-soft:#1b2552;--ok:#4cc39b;--ok-soft:#12332a;--bad:#ff7b7b;--bad-soft:#3b1b1d;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0b1215;--surface:#121c20;--ink:#e4eced;--mut:#8a9ca2;--line:#26373d;
+  --accent:#8da0ff;--accent-soft:#1b2552;--ok:#4cc39b;--ok-soft:#12332a;--bad:#ff7b7b;--bad-soft:#3b1b1d;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{
+  margin:0;background:var(--bg);color:var(--ink);
+  font:400 16px/1.6 var(--f-body);
+  padding-left:max(16px,env(safe-area-inset-left,0px));
+  padding-right:max(16px,env(safe-area-inset-right,0px));
+  padding-block:20px 0;
+}
+button{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.page{max-width:1120px;margin:0 auto}
+.lab{font:500 11px/1.2 var(--f-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--mut)}
+.kick{font:500 12px/1.3 var(--f-mono);letter-spacing:.1em;text-transform:uppercase;color:var(--accent);margin:0}
+
+/* top strip and hero */
+.top{display:flex;justify-content:space-between;gap:8px 24px;flex-wrap:wrap;padding-bottom:0}
+.hero{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:24px 56px;align-items:end;padding-block:40px;border-bottom:2px solid var(--ink)}
+h1{margin:0;font:900 clamp(64px,13vw,164px)/.84 var(--f-display);text-transform:uppercase;letter-spacing:-.005em}
+h1 span{color:var(--accent);display:block}
+.lead{max-width:52ch;font-size:19px;line-height:1.5;margin:22px 0 0}
+.card{margin:0;min-width:240px;font:400 12px/1.5 var(--f-mono)}
+.card div{display:grid;grid-template-columns:84px 1fr;gap:12px;padding:8px 0;border-top:1px solid var(--line)}
+.card dt{color:var(--mut);text-transform:uppercase;letter-spacing:.1em;font-size:11px;padding-top:1px}
+.card dd{margin:0}
+
+/* index + panel */
+.layout{display:grid;grid-template-columns:232px minmax(0,1fr);gap:48px 24px;padding-top:36px}
+.rail{position:sticky;top:calc(24px + env(safe-area-inset-top,0px));align-self:start}
+.rail .lab{display:block;margin-bottom:12px}
+.tabs{display:flex;flex-direction:column}
+.tab{display:block;width:100%;text-align:left;background:none;border:0;border-top:1px solid var(--line);padding:12px 0 12px;cursor:pointer;color:var(--mut)}
+.tab b{display:block;font:900 46px/.95 var(--f-display);text-transform:uppercase;letter-spacing:.005em;transition:color .2s}
+.tab small{display:block;font:400 12px/1.4 var(--f-mono);letter-spacing:.03em;margin-top:2px}
+.tab:hover b{color:var(--ink)}
+.tab[aria-selected="true"]{color:var(--ink);border-top:3px solid var(--accent);padding-top:10px}
+.tab[aria-selected="true"] b{color:var(--accent)}
+main{container:main/inline-size;min-width:0}
+h2{margin:8px 0 14px;font:900 clamp(40px,6vw,76px)/.9 var(--f-display);text-transform:uppercase;text-wrap:balance}
+.intro{max-width:60ch;color:var(--mut);font-size:17px;margin:0 0 28px}
+
+/* order of work */
+.flow{display:flex;flex-wrap:wrap;gap:8px 0;list-style:none;margin:0;padding:0}
+.flow li{display:flex;align-items:center}
+.flow li:not(:last-child)::after{content:"→";color:var(--mut);padding:0 8px;font:400 13px var(--f-mono)}
+.flow button{background:var(--surface);border:1px solid var(--line);padding:6px 10px;cursor:pointer;font:400 12px/1.3 var(--f-mono);display:flex;gap:8px;transition:border-color .2s}
+.flow button:hover{border-color:var(--accent)}
+.flow button span{color:var(--accent);font-weight:500}
+.flowloop{font:400 12px/1.4 var(--f-mono);color:var(--mut);margin:10px 0 32px}
+
+/* bench */
+.bench{border:1px solid var(--ink);background:var(--surface);margin:0 0 44px}
+.bench-h{display:grid;grid-template-columns:minmax(0,1fr);gap:8px;padding:16px;border-bottom:1px solid var(--ink)}
+.bench-h>.lab{margin:0}
+.bench-h h3{margin:0;font:900 26px/1 var(--f-display);text-transform:uppercase;letter-spacing:.01em}
+.bench-h .note{margin:0;font:400 12px/1.5 var(--f-mono);color:var(--mut)}
+.bench-b{padding:16px}
+.small{font:400 12px/1.5 var(--f-mono);color:var(--mut);margin:14px 0 0;max-width:70ch}
+.tablewrap{overflow-x:auto}
+.mx{border-collapse:separate;border-spacing:4px 1px;width:100%;min-width:560px;table-layout:fixed}
+.mx th:first-child{width:180px}
+.mx th{font:500 9px/1.3 var(--f-mono);letter-spacing:.06em;text-transform:uppercase;color:var(--mut);text-align:center;padding:4px 2px}
+.mx tbody th{text-align:left;font:500 14px/1.3 var(--f-body);letter-spacing:0;text-transform:none;color:var(--ink);padding-right:12px;white-space:nowrap}
+.cell{width:100%;min-width:44px;height:44px;border:1px solid var(--line);background:var(--bg);color:var(--mut);font:500 17px var(--f-mono);cursor:pointer;transition:background .15s}
+.cell[data-v="1"]{background:var(--ok-soft);color:var(--ok);border-color:var(--ok)}
+.cell[data-v="2"]{background:var(--bad-soft);color:var(--bad);border-color:var(--bad)}
+.mx-foot{display:flex;flex-wrap:wrap;gap:8px 32px;margin-top:14px;align-items:flex-start}
+.mx-sum{margin:0;font:400 13px/1.5 var(--f-mono)}
+.mx-fails{margin:0;padding:0;list-style:none;font:400 13px/1.6 var(--f-mono);color:var(--bad)}
+.mx-fails li::before{content:"✗ "}
+.mx-fails .none{color:var(--mut)}.mx-fails .none::before{content:""}
+.split{display:grid;grid-template-columns:minmax(0,260px) minmax(0,1fr);gap:20px 28px}
+.olist,.llist{display:flex;flex-direction:column;gap:4px}
+.oitem,.litem{display:flex;gap:10px;align-items:baseline;text-align:left;background:var(--bg);border:1px solid var(--line);padding:8px 10px;cursor:pointer;font-size:14px;line-height:1.3}
+.oitem span{font:500 11px var(--f-mono);color:var(--accent);min-width:28px}
+.oitem[aria-pressed="true"],.litem[aria-pressed="true"]{border-color:var(--accent);background:var(--accent-soft)}
+.detail h4{margin:6px 0 10px;font:900 30px/1 var(--f-display);text-transform:uppercase}
+.detail dl{margin:0;display:grid;gap:4px}
+.detail dt{font:500 11px var(--f-mono);letter-spacing:.1em;text-transform:uppercase;color:var(--accent);margin-top:10px}
+.detail dd{margin:0;max-width:62ch}
+.litem{flex-direction:column;gap:6px;align-items:stretch}
+.bar{display:block;height:6px;background:var(--line)}
+.bar i{display:block;height:100%;background:var(--accent)}
+
+/* annotation */
+.an-q{margin:10px 0 14px;padding:14px 16px;background:var(--bg);border:1px solid var(--line);font-size:19px;line-height:1.45;max-width:60ch}
+.votes{display:flex;flex-wrap:wrap;gap:8px 18px;font:400 13px var(--f-mono);margin-bottom:14px}
+.votes b{font-weight:500}
+.picks{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:8px;max-width:560px}
+.btn,.pick{background:var(--bg);border:1px solid var(--ink);padding:10px 12px;cursor:pointer;font-weight:500;transition:background .15s}
+.btn:hover,.pick:hover:not(:disabled){background:var(--accent-soft)}
+.pick:disabled{cursor:default;opacity:.55}
+.pick[aria-pressed="true"]{opacity:1;background:var(--accent);color:var(--bg);border-color:var(--accent)}
+.res{margin:16px 0 6px;font-size:15px}
+.res.ok b{color:var(--ok)}.res.flag b{color:var(--bad)}
+.chip{display:inline-block;font:500 12px var(--f-mono);padding:2px 8px;background:var(--accent-soft);color:var(--accent);border:1px solid var(--accent)}
+.an-done .big{font:900 40px/1 var(--f-display);text-transform:uppercase;margin:8px 0 10px}
+.an-next{margin-top:12px}
+
+/* ledger of stages */
+.ledger{border-top:2px solid var(--ink)}
+.stage{display:grid;grid-template-columns:76px minmax(0,1fr) 250px;gap:10px 28px;padding:24px 8px 24px 0;border-bottom:1px solid var(--line);scroll-margin-top:24px;transition:background .4s}
+.stage.flash{background:var(--accent-soft)}
+.stage-n b{display:block;font:900 60px/.85 var(--f-display);color:var(--accent)}
+.stage-n small{font:400 11px var(--f-mono);color:var(--mut);letter-spacing:.08em}
+.stage h3{margin:0 0 6px;font:900 30px/1 var(--f-display);text-transform:uppercase;letter-spacing:.005em}
+.stage p{margin:0 0 10px;max-width:60ch}
+.stage .q{font-size:15px}
+.stage .q span{font:500 11px var(--f-mono);letter-spacing:.1em;text-transform:uppercase;color:var(--accent);margin-right:8px}
+.stage-r{font-size:14px;min-width:0}
+.stage-r .lab{display:block;margin-bottom:4px}
+.stage-r p{margin:0 0 10px}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chips span{font:400 11px/1.3 var(--f-mono);padding:3px 8px;border:1px solid var(--line);background:var(--surface)}
+.stage-r .loop{font:500 12px/1.4 var(--f-mono);color:var(--accent);margin:10px 0 0}
+@container main (max-width:720px){
+  .stage{grid-template-columns:22px minmax(0,1fr)}
+  .stage-r{grid-column:2}
+  .split{grid-template-columns:minmax(0,1fr)}
+}
+
+/* verdict */
+.verdict{margin-top:44px;display:flex;align-items:center;gap:28px;flex-wrap:wrap}
+.stamp{display:inline-block;border:3px solid var(--accent);outline:1px solid var(--accent);outline-offset:3px;color:var(--accent);padding:8px 18px;font:900 36px/1 var(--f-display);text-transform:uppercase;letter-spacing:.07em;transform:rotate(-3deg)}
+.verdict p{margin:0;max-width:46ch;font-size:18px;line-height:1.45}
+
+.foot{margin:32px 0 16px;padding-top:16px;border-top:2px solid var(--ink);color:var(--mut);font-size:14px;max-width:70ch}
+
+@media (max-width:860px){
+  .layout{grid-template-columns:minmax(0,1fr);gap:28px}
+  .rail{position:static}
+  .tabs{display:grid;grid-template-columns:1fr 1fr;gap:0 20px}
+  .tab b{font-size:36px}
+  .hero{grid-template-columns:minmax(0,1fr)}
+  .card{min-width:0}
+  .bench-h{grid-template-columns:minmax(0,1fr);gap:8px;padding:14px}
+  .bench-h>.lab,.bench-h h3,.bench-h .note{grid-column:1}
+}
+@media (min-width:861px){.hero{align-items:center}.hero .card{transform:translateY(112px)}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+
+<div class="page">
+  <div class="top lab"><span>/investigate</span><span>File open · reviewed Nov 2026</span></div>
+
+  <header class="hero">
+    <div>
+      <h1>How I <span>investigate</span></h1>
+      <p class="lead">Four fields, one habit. A claim counts as true once I have tried to prove it wrong and failed.</p>
+    </div>
+    <dl class="card">
+      <div><dt>Fields</dt><dd>Testing, security, AI training data, health evidence</dd></div>
+      <div><dt>Order</dt><dd>Question, method, evidence, verdict, recheck</dd></div>
+      <div><dt>Output</dt><dd>Something another person can check</dd></div>
+    </dl>
+  </header>
+
+  <div class="layout">
+    <nav class="rail" aria-label="Fields">
+      <span class="lab">Open a field</span>
+      <div class="tabs" id="tabs"></div>
+    </nav>
+    <main id="panel"></main>
+  </div>
+
+  <p class="foot">Tools and threats change every few months. The order of questioning stays the same: question, method, evidence, verdict, recheck.</p>
+</div>
+
+<script>
+(function(){
+var esc=function(s){return String(s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})};
+var reduce=window.matchMedia&&window.matchMedia('(prefers-reduced-motion:reduce)').matches;
+
+var CASES=[
+{id:'test',tab:'Test',sub:'software quality',bench:'matrix',
+ title:'Try to break it on purpose.',
+ intro:'How I check that software does what it promises, and what it does when things go wrong. The method is the same for a login form and a payment flow.',
+ stages:[
+  {t:'Read the claim',d:'Before any test, I list what the product promises. Every requirement, story and unwritten assumption becomes a statement I can check. Words like fast or easy get a number.',q:'What would make this wrong?',out:'A list of checkable statements',tools:['requirements','acceptance criteria']},
+  {t:'Map the risk',d:'I rank features by what hurts most when they break: money, data, trust. That ranking decides where the time goes.',q:'Who gets hurt if this fails, and how badly?',out:'A risk map that orders the work',tools:['risk matrix','user flows']},
+  {t:'Design the cases',d:'Happy path, edge values, bad input, interruptions, slow networks. Equivalence classes and boundary values keep the set small and sharp.',q:'What would a tired, rushed or hostile user do?',out:'Test cases with expected results',tools:['test plan','boundary values','checklists']},
+  {t:'Run and observe',d:'I explore by hand first, then automate what repeats. I log exact steps, environment and what I saw, so every result can be repeated.',q:'Did it do what it said, and what else did it do?',out:'A run log with evidence',tools:['browser devtools','API client','test runner']},
+  {t:'Report so it gets fixed',d:'One bug, one report. Title, steps, expected result, actual result, severity, and a screenshot or log. Someone else can reproduce it in two minutes.',q:'Could a stranger reproduce this?',out:'Clear bug reports ranked by severity',tools:['issue tracker']},
+  {t:'Retest and guard',d:'I confirm the fix, then check what sits next to it. Anything that broke once goes into the regression suite so it cannot come back quietly.',q:'What else could this fix have disturbed?',out:'A regression suite that grows',tools:['regression suite','automation'],loop:'↺ Fix failed? Back to Run and observe.'}
+ ],
+ verdict:'Ship, hold, or fix first, with the evidence beside the call.'},
+
+{id:'secure',tab:'Secure',sub:'application security',bench:'owasp',
+ title:'Find the weak spot before someone else does.',
+ intro:'How I test an application for weaknesses with permission, and how I keep my knowledge current while the threat picture changes every week.',
+ stages:[
+  {t:'Agree the scope',d:'What is in bounds, what is off limits, and who has said yes. It is written down before I probe anything.',q:'Do I have permission, and where does it end?',out:'A signed-off scope note',tools:['scope','rules of engagement']},
+  {t:'Map the surface',d:'Pages, endpoints, inputs, user roles, data flows and third-party parts. I cannot protect what I have not listed.',q:'Where does data come in, and where does it go?',out:'An attack surface map',tools:['threat model','data flow diagram']},
+  {t:'Test against OWASP',d:'I walk the application through the OWASP Top 10 category by category, use the Web Security Testing Guide for method, and the ASVS for what good looks like.',q:'Can someone do something they should not be allowed to do?',out:'A findings checklist with notes',tools:['OWASP Top 10','WSTG','ASVS']},
+  {t:'Confirm and rate',d:'I reproduce each finding, rule out false alarms, then rate impact and likelihood. CVSS gives everyone the same scale.',q:'Is it real, and how bad is it?',out:'Confirmed findings with severity',tools:['CVSS','reproduction steps']},
+  {t:'Report and verify',d:'A plain-language write-up: what, where, why it matters and how to fix it. After the fix, I test it again.',q:'Can the reader act on this without calling me?',out:'A report with fix guidance, then a retest',tools:['report','retest']},
+  {t:'Stay current',d:'Security moves weekly. I follow OWASP project updates, new CVEs, the CISA Known Exploited Vulnerabilities list, vendor advisories and security news. Anything that touches a system I look after becomes a recheck.',q:'What changed this week that touches what I protect?',out:'A dated watchlist and recheck notes',tools:['OWASP','CVE / NVD','CISA KEV','vendor advisories','security news'],loop:'↺ New advisory? Back to Map the surface.'}
+ ],
+ verdict:'A risk rating and a fix list, in an order the team can work through.'},
+
+{id:'train',tab:'Train',sub:'AI training data',bench:'annot',
+ title:'Turn judgment into clean data.',
+ intro:'How I turn human judgment into data a model can learn from, and show that the data is consistent before anyone trains on it.',
+ stages:[
+  {t:'Define the task',d:'What should the model learn? I write each label as a definition with an example and a near miss, so the boundaries are visible.',q:'What exactly counts as each label?',out:'A label schema',tools:['label schema','examples']},
+  {t:'Write the guidelines',d:'Plain rules for the borderline calls, with worked examples. If two careful people read a rule differently, it is not finished.',q:'Would two people make the same call from this page?',out:'Guidelines, version 1',tools:['guidelines','edge case log']},
+  {t:'Run a pilot',d:'A small batch, labelled by several people. Disagreement points to the exact spot where the guidelines are vague.',q:'Where do careful people disagree?',out:'Pilot results and a list of fixes',tools:['pilot batch','disagreement notes']},
+  {t:'Annotate',d:'Consistent labelling of text, images, audio or ranked model responses. Odd cases get a note instead of a guess.',q:'Am I labelling what the rule says, or what I feel?',out:'Labelled data with notes on odd cases',tools:['annotation platform','spreadsheets']},
+  {t:'Check quality',d:'Agreement scores between annotators, spot checks against a gold set, and audits of random samples. Disagreements go to adjudication, and the answer goes back into the guidelines.',q:'How consistent is this, and where does it drift?',out:'Quality scores and an adjudicated gold set',tools:['inter-annotator agreement','gold set','audits'],loop:'↺ Low agreement? Fix the guideline first.'},
+  {t:'Evaluate and hand off',d:'I check label balance, gaps and bias, then test model outputs against held-out examples. The dataset is versioned with notes on what it can and cannot do.',q:'What will a model get wrong because of this data?',out:'A versioned dataset with data notes',tools:['held-out set','error analysis','versioning']}
+ ],
+ verdict:'A dataset with a quality score and the notes needed to trust it.'},
+
+{id:'appraise',tab:'Appraise',sub:'health evidence',bench:'ladder',
+ title:'Weigh the evidence before the headline.',
+ intro:'How I read health research and decide how far a result deserves to be trusted, then explain it in plain language.',
+ stages:[
+  {t:'Frame the question',d:'I turn a vague worry into one answerable question: who, what is done, compared with what, and which outcome.',q:'Who is this for, and what outcome matters to them?',out:'One answerable question',tools:['PICO']},
+  {t:'Search systematically',d:'Named databases such as PubMed and the Cochrane Library, written search terms, and dates logged so someone else can repeat the search.',q:'Could someone repeat this search and find the same studies?',out:'A search log',tools:['PubMed','Cochrane Library','search log']},
+  {t:'Screen',d:'Inclusion and exclusion rules are set before I read results. Each excluded study gets a reason.',q:'Am I choosing studies for their quality or for their answer?',out:'A screened list with reasons',tools:['inclusion criteria','flow diagram']},
+  {t:'Appraise quality',d:'Study design, sample size, bias, confounding and conflicts of interest, checked with recognised tools such as CASP and risk-of-bias checklists.',q:'What else could explain this result?',out:'A quality rating for each study',tools:['CASP','risk-of-bias tools']},
+  {t:'Weigh and combine',d:'What agrees, what conflicts, how large the effect is and how certain it is. A GRADE-style rating states the confidence.',q:'How sure am I, and why?',out:'A summary with a certainty rating',tools:['effect size','GRADE']},
+  {t:'Say it plainly',d:'A short brief in plain language that states who the result applies to, who it does not, and what remains unknown.',q:'Would a non-specialist act correctly on this?',out:'A dated plain-language brief',tools:['plain language summary'],loop:'↺ New trial published? Back to Search systematically.'}
+ ],
+ verdict:'A certainty rating and a plain statement of what is still unknown.'}
+];
+
+var BENCH_META={
+ matrix:{title:'Coverage matrix: login flow',note:'Example data. Click a cell to cycle untested, pass, fail.'},
+ owasp:{title:'OWASP Top 10:2025 field notes',note:'Select a category.'},
+ annot:{title:'Annotation round: sentiment',note:'Label three items and see how agreement works.'},
+ ladder:{title:'Evidence ladder',note:'Select a level.'}
+};
+
+/* ---------- benches ---------- */
+function benchMatrix(el){
+ var rows=['Valid login','Wrong password','Locked account','Password reset','Session timeout'];
+ var cols=['Functional','Edge input','Security','Accessibility','Speed'];
+ var g=[[1,1,1,1,1],[1,1,2,0,1],[1,0,0,0,0],[1,2,1,0,0],[0,0,1,0,0]];
+ var sym=['·','✓','✗'],nm=['untested','pass','fail'];
+ el.innerHTML='<div class="tablewrap"><table class="mx"><thead><tr><th scope="col"><span class="sr">Scenario</span></th>'+
+  cols.map(function(c){return '<th scope="col">'+esc(c)+'</th>'}).join('')+'</tr></thead><tbody>'+
+  rows.map(function(r,i){return '<tr><th scope="row">'+esc(r)+'</th>'+cols.map(function(c,j){return '<td><button type="button" class="cell" data-r="'+i+'" data-c="'+j+'"></button></td>'}).join('')+'</tr>'}).join('')+
+  '</tbody></table></div><div class="mx-foot"><p class="mx-sum" aria-live="polite"></p><ul class="mx-fails"></ul></div>'+
+  '<p class="small">Each fail becomes one bug report with steps, expected result, actual result and evidence. Empty cells are the gaps I still owe.</p>';
+ function paint(){
+  el.querySelectorAll('.cell').forEach(function(b){
+   var r=+b.dataset.r,c=+b.dataset.c,v=g[r][c];
+   b.dataset.v=v;b.textContent=sym[v];
+   b.setAttribute('aria-label',rows[r]+', '+cols[c]+': '+nm[v]+'. Press to change.');
+  });
+  var flat=[].concat.apply([],g),ran=flat.filter(Boolean).length,pass=flat.filter(function(v){return v===1}).length,fail=flat.filter(function(v){return v===2}).length;
+  el.querySelector('.mx-sum').innerHTML='<b>'+ran+'</b> of '+flat.length+' run · <b>'+pass+'</b> passing · <b>'+fail+'</b> failing';
+  var f=[];g.forEach(function(row,r){row.forEach(function(v,c){if(v===2)f.push(rows[r]+' · '+cols[c])})});
+  el.querySelector('.mx-fails').innerHTML=f.length?f.map(function(x){return '<li>'+esc(x)+'</li>'}).join(''):'<li class="none">No failures logged.</li>';
+ }
+ el.addEventListener('click',function(e){
+  var b=e.target.closest('.cell');if(!b)return;
+  var r=+b.dataset.r,c=+b.dataset.c;g[r][c]=(g[r][c]+1)%3;paint();
+ });
+ paint();
+}
+
+function benchOwasp(el){
+ var items=[
+  {id:'A01',n:'Broken Access Control',w:'People reach data or actions their role should not allow.',t:'Change identifiers in requests, call admin routes as a normal user, and reuse one account\'s requests under another account.',f:'Check permissions on the server for every request and deny by default.'},
+  {id:'A02',n:'Security Misconfiguration',w:'Unsafe defaults, open services, debug modes and chatty error pages.',t:'Review headers, default credentials, exposed consoles and storage, and what the app reveals when it errors.',f:'Start from a hardened baseline and review configuration like code.'},
+  {id:'A03',n:'Software Supply Chain Failures',w:'Risky dependencies, build steps and update channels.',t:'List dependencies, compare versions with known vulnerabilities, and check how packages and builds are verified.',f:'Keep an inventory, pin and verify dependencies, and update on a schedule.'},
+  {id:'A04',n:'Cryptographic Failures',w:'Sensitive data exposed by weak or missing encryption.',t:'Check the TLS setup, what is stored in plain text, how passwords are hashed and where keys live.',f:'Use current algorithms, protect keys, and encrypt in transit and at rest.'},
+  {id:'A05',n:'Injection',w:'Untrusted input is read as a command or a query.',t:'In a test environment, send crafted input through forms, parameters and headers, and watch for errors or changed behaviour.',f:'Use parameterised queries, validate input and encode output.'},
+  {id:'A06',n:'Insecure Design',w:'The flaw sits in the plan, so clean code cannot fix it.',t:'Walk the threat model: abuse cases, missing limits and trust assumptions in each workflow.',f:'Threat-model early and build limits and checks into the design.'},
+  {id:'A07',n:'Authentication Failures',w:'Weak login, recovery or session handling.',t:'Examine password rules, lockout, the reset flow, session expiry and token handling.',f:'Add multi-factor sign-in, rate limits and careful session handling.'},
+  {id:'A08',n:'Software or Data Integrity Failures',w:'Code or data is trusted without checking where it came from.',t:'Inspect update mechanisms, unsigned artifacts and how untrusted data is deserialised.',f:'Verify signatures and integrity before trusting anything.'},
+  {id:'A09',n:'Security Logging & Alerting Failures',w:'Attacks happen and nobody sees them.',t:'Trigger failed logins and denied actions, then check they are logged and that someone would be alerted.',f:'Log security events, alert on patterns and protect the logs.'},
+  {id:'A10',n:'Mishandling of Exceptional Conditions',w:'The system fails open or leaks details when something goes wrong.',t:'Force errors, timeouts and malformed input, and check that it fails safely and says little.',f:'Handle every failure path, fail closed and keep error messages generic.'}
+ ];
+ var sel=0;
+ el.innerHTML='<div class="split"><div class="olist">'+items.map(function(x,i){return '<button type="button" class="oitem" data-i="'+i+'" aria-pressed="false"><span>'+x.id+'</span>'+esc(x.n)+'</button>'}).join('')+'</div><div class="detail" aria-live="polite"></div></div>'+
+  '<p class="small">My rhythm: every day I skim headlines and advisories. Every week I check new CVEs for the stack in scope. When OWASP publishes a new edition, I update my checklists.</p>';
+ function paint(){
+  el.querySelectorAll('.oitem').forEach(function(b){b.setAttribute('aria-pressed',String(+b.dataset.i===sel))});
+  var x=items[sel];
+  el.querySelector('.detail').innerHTML='<p class="kick">'+x.id+'</p><h4>'+esc(x.n)+'</h4><dl><dt>What goes wrong</dt><dd>'+esc(x.w)+'</dd><dt>How I test it</dt><dd>'+esc(x.t)+'</dd><dt>What the fix looks like</dt><dd>'+esc(x.f)+'</dd></dl>';
+ }
+ el.addEventListener('click',function(e){var b=e.target.closest('.oitem');if(!b)return;sel=+b.dataset.i;paint()});
+ paint();
+}
+
+function benchAnnot(el){
+ var LABELS=['Positive','Negative','Mixed','Neutral'];
+ var items=[
+  {text:'The delivery was a day late, but support sorted it out within minutes.',a:'Mixed',b:'Mixed',gold:'Mixed',rule:'Rule 3.2: a complaint resolved in the same text is Mixed, not Positive.'},
+  {text:'Great, another update that moves every button again.',a:'Positive',b:'Negative',gold:'Negative',rule:'Rule 5.1: sarcasm is labelled by the meaning the writer intends.'},
+  {text:'Works fine. Would love a dark mode.',a:'Positive',b:'Mixed',gold:'Mixed',rule:'Rule 3.4: praise plus a request for a missing feature is Mixed.'}
+ ];
+ var i=0,pick=null,acc=0,adj=0;
+ function draw(){
+  if(i>=items.length){
+   el.innerHTML='<div class="an-done"><p class="kick">Round complete</p><p class="big">'+acc+' accepted, '+adj+' sent to adjudication</p><p>Every adjudicated item sends a note back to the guidelines, so the next round starts clearer.</p><button type="button" class="btn" data-act="restart">Run the round again</button></div>';
+   return;
+  }
+  var it=items[i],res='';
+  if(pick){
+   var votes=[it.a,it.b,pick];
+   var top=Math.max.apply(null,LABELS.map(function(l){return votes.filter(function(v){return v===l}).length}));
+   if(top===3){
+    res='<p class="res ok"><b>3 of 3 agree.</b> The label “'+esc(pick)+'” goes into the dataset.</p>';
+   }else{
+    res='<p class="res flag"><b>'+top+' of 3 agree.</b> This item goes to adjudication. Agreement alone does not decide the label.</p>'+
+     '<p>Gold label: <span class="chip">'+esc(it.gold)+'</span></p><p class="small">'+esc(it.rule)+' '+(pick===it.gold?'Your label matches the gold label.':'Your label differs, so the guideline gets a clearer example.')+'</p>';
+   }
+   res+='<button type="button" class="btn an-next" data-act="next">'+(i===items.length-1?'See round summary':'Next item')+'</button>';
+  }
+  el.innerHTML='<p class="lab">Item '+(i+1)+' of '+items.length+'</p><blockquote class="an-q" style="margin-left:0">'+esc(it.text)+'</blockquote>'+
+   '<div class="votes"><span>Annotator A: <b>'+esc(it.a)+'</b></span><span>Annotator B: <b>'+esc(it.b)+'</b></span><span>You: <b>'+(pick?esc(pick):'?')+'</b></span></div>'+
+   '<div class="picks">'+LABELS.map(function(l){return '<button type="button" class="pick" data-l="'+l+'" aria-pressed="'+(pick===l)+'"'+(pick?' disabled':'')+'>'+l+'</button>'}).join('')+'</div>'+res+
+   '<p class="small">Two annotators have already labelled this item. Add your label as the third.</p>';
+ }
+ el.addEventListener('click',function(e){
+  var p=e.target.closest('.pick'),a=e.target.closest('[data-act]');
+  if(p&&!pick){
+   pick=p.dataset.l;var it=items[i];
+   var allSame=(it.a===it.b&&it.b===pick);
+   if(allSame)acc++;else adj++;
+   draw();
+  }else if(a){
+   if(a.dataset.act==='next'){i++;pick=null;draw()}
+   else if(a.dataset.act==='restart'){i=0;pick=null;acc=0;adj=0;draw()}
+  }
+ });
+ draw();
+}
+
+function benchLadder(el){
+ var L=[
+  {n:'Systematic reviews and meta-analyses',w:100,tells:'They pool every good study on one question and show the overall pattern.',check:'Was the search complete and repeatable? Were the studies similar enough to combine? Was the spread between studies reported?',watch:'Combining weak studies gives a confident-looking weak answer.'},
+  {n:'Randomised controlled trials',w:84,tells:'Whether a treatment caused a difference, because chance decided who received it.',check:'How people were randomised, who was blinded, how many dropped out, and whether the outcome matters to patients.',watch:'Narrow groups of participants, short follow-up, and stand-in outcomes.'},
+  {n:'Cohort studies',w:66,tells:'What happens to groups of people over time.',check:'How the groups were chosen, which confounders were adjusted for, and how many were lost to follow-up.',watch:'Association is not cause. Healthier people often choose healthier habits.'},
+  {n:'Case-control studies',w:50,tells:'Which past exposures differ between people with and without an outcome.',check:'How controls were picked and whether exposure was measured or remembered.',watch:'Memory of exposure can be shaped by the outcome.'},
+  {n:'Case series and reports',w:34,tells:'That something happened and deserves a proper study.',check:'How unusual the case is and how well it is documented.',watch:'No comparison group, so risk cannot be estimated.'},
+  {n:'Expert opinion and mechanism',w:20,tells:'A plausible reason and a place to start looking.',check:'Whether data back it up, and who benefits from the claim.',watch:'Plausible biology is often wrong in real people.'}
+ ];
+ var sel=1;
+ el.innerHTML='<div class="split"><div class="llist">'+L.map(function(x,i){return '<button type="button" class="litem" data-i="'+i+'" aria-pressed="false"><span>'+esc(x.n)+'</span><span class="bar"><i style="width:'+x.w+'%"></i></span></button>'}).join('')+'</div><div class="detail" aria-live="polite"></div></div>'+
+  '<p class="small">Bars show typical weight for a cause-and-effect question when the study is well run. Design is a starting point. A careful cohort can beat a sloppy trial, so I always appraise the study itself.</p>';
+ function paint(){
+  el.querySelectorAll('.litem').forEach(function(b){b.setAttribute('aria-pressed',String(+b.dataset.i===sel))});
+  var x=L[sel];
+  el.querySelector('.detail').innerHTML='<p class="kick">Level '+(sel+1)+' of '+L.length+'</p><h4>'+esc(x.n)+'</h4><dl><dt>What it can tell me</dt><dd>'+esc(x.tells)+'</dd><dt>What I check</dt><dd>'+esc(x.check)+'</dd><dt>Watch out for</dt><dd>'+esc(x.watch)+'</dd></dl>';
+ }
+ el.addEventListener('click',function(e){var b=e.target.closest('.litem');if(!b)return;sel=+b.dataset.i;paint()});
+ paint();
+}
+var BENCH={matrix:benchMatrix,owasp:benchOwasp,annot:benchAnnot,ladder:benchLadder};
+
+/* ---------- shell ---------- */
+var panel=document.getElementById('panel'),tabs=document.getElementById('tabs');
+tabs.innerHTML=CASES.map(function(c){return '<button type="button" class="tab" role="tab" data-id="'+c.id+'" aria-selected="false"><b>'+esc(c.tab)+'</b><small>'+esc(c.sub)+'</small></button>'}).join('');
+tabs.setAttribute('role','tablist');
+tabs.addEventListener('click',function(e){
+ var b=e.target.closest('.tab');if(!b)return;
+ if(location.hash.slice(1)===b.dataset.id){render(b.dataset.id)}else{location.hash=b.dataset.id}
+});
+
+function render(id){
+ var c=CASES.filter(function(x){return x.id===id})[0]||CASES[0];
+ Array.prototype.forEach.call(tabs.children,function(b){b.setAttribute('aria-selected',String(b.dataset.id===c.id))});
+ var n=c.stages.length,bm=BENCH_META[c.bench];
+ panel.innerHTML=
+  '<p class="kick">Field · '+esc(c.sub)+'</p><h2>'+esc(c.title)+'</h2><p class="intro">'+esc(c.intro)+'</p>'+
+  '<ol class="flow" aria-label="Order of work">'+c.stages.map(function(s,i){return '<li><button type="button" data-go="'+i+'"><span>'+(i+1)+'</span>'+esc(s.t)+'</button></li>'}).join('')+'</ol>'+
+  '<p class="flowloop">↺ Any stage can send me back a step.</p>'+
+  '<section class="bench" aria-label="'+esc(bm.title)+'"><div class="bench-h"><span class="lab">Bench</span><h3>'+esc(bm.title)+'</h3><span class="note">'+esc(bm.note)+'</span></div><div class="bench-b" id="bench-b"></div></section>'+
+  '<div class="ledger">'+c.stages.map(function(s,i){
+    return '<article class="stage" id="stg-'+i+'"><div class="stage-n"><b>'+(i+1)+'</b><small>of '+n+'</small></div>'+
+     '<div><h3>'+esc(s.t)+'</h3><p>'+esc(s.d)+'</p><p class="q"><span>Ask</span>'+esc(s.q)+'</p></div>'+
+     '<div class="stage-r"><span class="lab">Leaves behind</span><p>'+esc(s.out)+'</p><div class="chips">'+s.tools.map(function(t){return '<span>'+esc(t)+'</span>'}).join('')+'</div>'+(s.loop?'<p class="loop">'+esc(s.loop)+'</p>':'')+'</div></article>';
+  }).join('')+'</div>'+
+  '<div class="verdict"><span class="stamp">Verdict</span><p>'+esc(c.verdict)+'</p></div>';
+ BENCH[c.bench](document.getElementById('bench-b'));
+}
+panel.addEventListener('click',function(e){
+ var g=e.target.closest('[data-go]');if(!g)return;
+ var el=document.getElementById('stg-'+g.dataset.go);if(!el)return;
+ el.scrollIntoView({behavior:reduce?'auto':'smooth',block:'start'});
+ el.classList.add('flash');setTimeout(function(){el.classList.remove('flash')},1400);
+});
+
+function fromHash(){
+ var h=location.hash.slice(1);
+ render(CASES.some(function(c){return c.id===h})?h:CASES[0].id);
+}
+window.addEventListener('hashchange',fromHash);
+fromHash();
+})();
+</script>
+
+</body></html>

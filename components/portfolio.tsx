@@ -2,21 +2,21 @@
 
 import Lenis from 'lenis'
 import { useEffect, useRef, useState } from 'react'
-import { ArrowUpRight, Headphones, Mail, MapPin, Pause, Play, Plus, Sparkles, Volume2 } from 'lucide-react'
+import { ArrowUpRight, Headphones, Mail, MapPin, Music2, Pause, Play, Volume2 } from 'lucide-react'
 import guitarImage from '@/images/no_bg_guitar.png'
 import soccerImage from '@/images/no_bg_soccer.png'
 
 const projects = [
-  { number: '01', title: 'Field Notes', type: 'Digital experience', year: '2024', color: 'coral', desc: 'A tactile archive for the rituals, rivalries, and poetry of the beautiful game.' },
-  { number: '02', title: 'Sonic Bloom', type: 'Creative technology', year: '2023', color: 'lavender', desc: 'A generative music visualizer where every beat grows into a new landscape.' },
-  { number: '03', title: 'Open Air', type: 'Brand world', year: '2023', color: 'mint', desc: 'A luminous identity system for a community moving culture forward.' },
+  { number: '01', title: 'Field Notes', type: 'Digital experience', year: '2024', color: 'coral', src: '/run.html', desc: 'A tactile archive for the rituals, rivalries, and poetry of the beautiful game.' },
+  { number: '02', title: 'Sonic Bloom', type: 'Creative technology', year: '2023', color: 'lavender', src: '/investigate.html', desc: 'A generative music visualizer where every beat grows into a new landscape.' },
+  { number: '03', title: 'Open Air', type: 'Brand world', year: '2023', color: 'mint', src: '/build.html', desc: 'A luminous identity system for a community moving culture forward.' },
 ]
 
 function scrollToSection(id: string) {
   document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
 }
 
-function Nav({ active, setActive, music, setMusic, showTip, onDismissTip }: { active: string; setActive: (s: string) => void; music: boolean; setMusic: (v: boolean) => void; showTip: boolean; onDismissTip: () => void }) {
+function Nav({ active, setActive, music, playing, setMusic }: { active: string; setActive: (s: string) => void; music: boolean; playing: boolean; setMusic: (v: boolean) => void }) {
   return <>
     <aside className="float-nav">
       <div className="nav-mark">A<span>/</span>R</div>
@@ -25,27 +25,22 @@ function Nav({ active, setActive, music, setMusic, showTip, onDismissTip }: { ac
       </div>
       <button className={`audio-pill ${music ? 'playing' : ''}`} onClick={() => setMusic(!music)} aria-label="Toggle audio">
         <span className="audio-dot">{music ? <Volume2 size={13} /> : <Headphones size={13} />}</span>
-        <span>{music ? 'NOW PLAYING' : 'AUDIO OFF'}</span>
+        <span>{!playing ? 'PAUSED' : music ? 'NOW PLAYING' : 'AUDIO OFF'}</span>
       </button>
     </aside>
-    {!music && <div className={`nav-toast ${showTip ? 'visible' : 'hidden'}`} role="status" aria-live="polite">
-      <button type="button" className="scene-tip" onClick={onDismissTip}>TURN UP THE MUSIC</button>
-    </div>}
   </>
 }
 
 function AvatarScene({ music, ready }: { music: boolean; ready: boolean }) {
-  const activeImage = music ? guitarImage : soccerImage
-  const activeLabel = music ? 'guitar mode' : 'soccer mode'
-
   return <div className={`scene ${music ? 'scene-playing' : ''}`} aria-label="Interactive avatar scene">
     <div className="sun-glow" />
-    <div className="scene-label"><span className="live-dot" /> {music ? 'live / sonic mode' : 'interactive scene'}</div>
+    <div className="scene-label"><span className="live-dot" /> {music ? 'Sonic mode' : 'Football Mode'}</div>
     <div className="orbit orbit-one" /><div className="orbit orbit-two" />
     <div className="avatar-shadow" />
-    <div className="character-button" aria-label={`Activate ${activeImage ? activeLabel : 'character'}`}>
+    <div className="character-button" aria-label={`Activate ${music ? 'guitar mode' : 'soccer mode'}`}>
       <div className="character-slab">
-        <img key={music ? 'guitar' : 'soccer'} src={activeImage.src} alt={activeLabel} className={`character-image ${ready ? 'is-ready' : 'is-loading'}`} loading="eager" draggable={false} fetchPriority="high" />
+        <img src={soccerImage.src} alt={music ? '' : 'soccer mode'} aria-hidden={music} className={`character-image ${ready && !music ? 'is-active' : ''}`} loading="eager" draggable={false} fetchPriority="high" />
+        <img src={guitarImage.src} alt={music ? 'guitar mode' : ''} aria-hidden={!music} className={`character-image guitar-image ${ready && music ? 'is-active' : ''}`} loading="eager" draggable={false} fetchPriority="high" />
       </div>
     </div>
     <div className="floating-note note-one">♪</div><div className="floating-note note-two">✦</div>
@@ -152,9 +147,32 @@ export default function Portfolio() {
   const [active, setActive] = useState('')
   const [music, setMusic] = useState(false)
   const [playing, setPlaying] = useState(true)
-  const [showTip, setShowTip] = useState(true)
   const [imagesReady, setImagesReady] = useState(false)
+  const [selectedProject, setSelectedProject] = useState<(typeof projects)[number] | null>(null)
   const panelRefs = useRef<Array<HTMLElement | null>>([])
+  const projectDialogRef = useRef<HTMLDialogElement>(null)
+  const lenisRef = useRef<Lenis | null>(null)
+
+  useEffect(() => {
+    const dialog = projectDialogRef.current
+    if (!dialog) return
+
+    if (selectedProject && !dialog.open) dialog.showModal()
+    if (!selectedProject && dialog.open) dialog.close()
+  }, [selectedProject])
+
+  useEffect(() => {
+    if (!selectedProject) return
+
+    const previousOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    lenisRef.current?.stop()
+
+    return () => {
+      document.body.style.overflow = previousOverflow
+      lenisRef.current?.start()
+    }
+  }, [selectedProject])
 
   useEffect(() => {
     const preload = (src: string) => new Promise<void>((resolve) => {
@@ -198,6 +216,7 @@ export default function Portfolio() {
       wheelMultiplier: 0.9,
       overscroll: false,
     })
+    lenisRef.current = lenis
 
     let rafId = 0
     const raf = (time: number) => {
@@ -210,6 +229,7 @@ export default function Portfolio() {
     return () => {
       cancelAnimationFrame(rafId)
       lenis.destroy()
+      lenisRef.current = null
     }
   }, [])
 
@@ -245,19 +265,8 @@ export default function Portfolio() {
     }
   }, [])
 
-  useEffect(() => {
-    if (!showTip) return
-    const timer = window.setTimeout(() => setShowTip(false), 4500)
-    return () => window.clearTimeout(timer)
-  }, [showTip])
-
-  const handleAudioToggle = () => {
-    setShowTip(false)
-    setMusic((prev) => !prev)
-  }
-
   return <main className="portfolio">
-    <Nav active={active} setActive={setActive} music={music} setMusic={handleAudioToggle} showTip={showTip && !music} onDismissTip={() => setShowTip(false)} />
+    <Nav active={active} setActive={setActive} music={music} playing={playing} setMusic={setMusic} />
     <section ref={(node) => { panelRefs.current[0] = node }} className="hero panel hero-panel" id="top">
       <div className="hero-copy">
         <div className="eyebrow"><span>01</span> creative developer / athlete / musician</div>
@@ -276,17 +285,22 @@ export default function Portfolio() {
     </section>
 
     <section ref={(node) => { panelRefs.current[2] = node }} className="projects panel projects-panel" id="projects">
-      <div className="section-heading"><div><div className="section-kicker">03 — SELECTED WORK</div><h2>IN <em>ROTATION.</em></h2></div><p>Three recent experiments<br />in making things matter.</p></div>
-      <div className="project-list">{projects.map((project) => <article className={`project-card ${project.color}`} key={project.number}><div className="project-meta"><span>{project.number}</span><span>{project.type}</span><span>{project.year}</span></div><div className="project-art"><div className="art-ring" /><div className="art-word">{project.title}</div><div className="art-plus"><Plus /></div></div><div className="project-bottom"><h3>{project.title}</h3><p>{project.desc}</p><ArrowUpRight /></div></article>)}</div>
+      <div className="section-heading"><div><div className="section-kicker">03 — SELECTED WORK</div><h2>IN <em>ROTATION.</em></h2></div><a className="projects-demo-pill" href="/demos">DEMO ROOM</a></div>
+      <div className="project-list">{projects.map((project) => <button type="button" className={`project-card ${project.color}`} key={project.number} onClick={() => setSelectedProject(project)}><div className="project-meta"><span>{project.number}</span><span>{project.type}</span><span>{project.year}</span></div><div className="project-art"><div className="art-ring" /><div className="art-word">{project.title}</div></div><div className="project-bottom"><h3>{project.title}</h3><p>{project.desc}</p></div></button>)}</div>
     </section>
 
     <section ref={(node) => { panelRefs.current[3] = node }} className="contact panel contact-panel" id="contact">
       <div className="contact-top"><div className="section-kicker">04 — OPEN CHANNEL</div><div className="signal">● signal is strong</div></div>
-      <div className="contact-grid"><div><h2>LET&apos;S MAKE<br /><em>SOMETHING</em><br />UNEXPECTED.</h2><a className="email-link" href="mailto:hello@alexarivera.studio">hello@alexarivera.studio <ArrowUpRight size={18} /></a></div><div className="audio-card"><div className="audio-card-top"><span><Sparkles size={15} /> CURRENTLY PLAYING</span><span>00:42 / 03:18</span></div><div className="track-title">Late Bloomer <small>— Alexa Rivera</small></div><Equalizer active={music && playing} /><div className="audio-controls"><button onClick={() => setPlaying(!playing)} aria-label="Play or pause track">{playing ? <Pause size={17} /> : <Play size={17} />}</button><div className="track-line"><span /></div><Volume2 size={15} /></div></div></div>
+      <div className="contact-grid"><div><h2>LET&apos;S MAKE<br /><em>SOMETHING</em><br />UNEXPECTED.</h2><a className="email-link" href="mailto:hello@alexarivera.studio">hello@alexarivera.studio <ArrowUpRight size={18} /></a></div><div className="audio-card"><div className="audio-card-top"><span><Music2 size={15} /> CURRENTLY PLAYING</span><span>00:42 / 03:18</span></div><div className="track-title">Late Bloomer <small>— Alexa Rivera</small></div><Equalizer active={music && playing} /><div className="audio-controls"><button type="button" onClick={() => setPlaying(!playing)} aria-label="Play or pause track" aria-pressed={playing}>{playing ? <Pause size={17} /> : <Play size={17} />}</button><div className="track-line"><span /></div></div></div></div>
     </section>
     <section className="page-end" aria-label="End of page">
       <MiniGame />
     </section>
     <footer className="page-footer"><span>© 2024 ALEXA RIVERA</span><span>CREATIVE DEVELOPER / NYC</span><span>IG / LI / ARE.NA</span></footer>
+    <dialog ref={projectDialogRef} className="project-dialog" aria-label="Project preview" onClose={() => setSelectedProject(null)} onClick={(event) => { if (event.target === event.currentTarget) event.currentTarget.close() }}>
+      <div className="project-dialog-content">
+        {selectedProject && <iframe key={selectedProject.src} src={selectedProject.src} title={selectedProject.title} />}
+      </div>
+    </dialog>
   </main>
 }

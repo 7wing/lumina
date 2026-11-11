@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>/run — how I run it</title>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@500;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#f3efe6;--sf:#fbf8f1;--ink:#1c1a17;--mut:#6d675c;--ln:#d9d2c1;--ac:#c2410c;--acs:#fbdcc8;--ok:#2b7a3a;--oks:#d3ecd6;--no:#a8321f;--nos:#f6d9d3;
+--fd:'Bricolage Grotesque','Arial Narrow',system-ui,sans-serif;--fm:'JetBrains Mono',ui-monospace,Menlo,monospace;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:0}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#13110e;--sf:#1c1a16;--ink:#f0ebe0;--mut:#988f7f;--ln:#332f27;--ac:#ff8a4c;--acs:#3a2314;--ok:#69db7c;--oks:#17301c;--no:#ff8b78;--nos:#3a1c17;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#13110e;--sf:#1c1a16;--ink:#f0ebe0;--mut:#988f7f;--ln:#332f27;--ac:#ff8a4c;--acs:#3a2314;--ok:#69db7c;--oks:#17301c;--no:#ff8b78;--nos:#3a1c17;color-scheme:dark}
+*{box-sizing:border-box}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 16px/1.6 system-ui,-apple-system,'Segoe UI',sans-serif;padding:20px max(16px,env(safe-area-inset-right,0px)) 0 max(16px,env(safe-area-inset-left,0px))}
+button{font:inherit;color:inherit;cursor:pointer}
+:focus-visible{outline:2px solid var(--ac);outline-offset:2px}
+.page{max-width:1080px;margin:0 auto}
+.lab{font:500 11px/1.2 var(--fm);letter-spacing:.12em;text-transform:uppercase;color:var(--mut);margin:0 0 12px}
+.top{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;margin-bottom:0}
+.top .lab{margin-bottom:0}
+.live{display:inline-flex;align-items:center;gap:8px}
+.live:before{content:"";width:8px;height:8px;border-radius:50%;background:var(--ok);animation:pl 1.6s infinite}
+@keyframes pl{0%{box-shadow:0 0 0 0 var(--oks)}70%{box-shadow:0 0 0 9px transparent}}
+.hero{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:24px 56px;align-items:end;padding:40px 0 34px}
+h1{margin:0;font:800 clamp(56px,12vw,140px)/.88 var(--fd);letter-spacing:-.035em}
+h1 span{display:block;color:var(--ac)}
+.lead{max-width:50ch;font-size:19px;margin:20px 0 0}
+.meta{margin:0;min-width:250px;font:400 12px/1.5 var(--fm)}
+.meta div{display:grid;grid-template-columns:70px 1fr;gap:12px;padding:8px 0;border-top:1px solid var(--ln)}
+.meta dt{color:var(--mut);text-transform:uppercase;letter-spacing:.1em;font-size:11px}.meta dd{margin:0}
+.tick{overflow:hidden;border-block:1px solid var(--ink);padding:9px 0;margin-bottom:30px;font:500 12px var(--fm);white-space:nowrap}
+.trk{display:inline-block;animation:mq 38s linear infinite}
+.trk span{margin-right:42px}.trk span:before{content:"● ";color:var(--ok)}
+@keyframes mq{to{transform:translateX(-50%)}}
+.tiles{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:46px}
+.tile{text-align:left;background:var(--sf);border:1px solid var(--ln);border-radius:14px;padding:16px;transition:.25s;position:relative;min-height:150px}
+.tile:hover{transform:translateY(-3px);border-color:var(--ac)}
+.tile .no{font:500 12px var(--fm);color:var(--mut)}
+.tile b{display:block;font:800 26px/1.05 var(--fd);margin:22px 0 6px;letter-spacing:-.01em}
+.tile small{color:var(--mut);font-size:13px;line-height:1.35;display:block}
+.tile[aria-selected="true"]{background:var(--ac);border-color:var(--ac);color:#fff}
+.tile[aria-selected="true"] .no,.tile[aria-selected="true"] small{color:#ffffffcc}
+main{animation:up .5s}
+@keyframes up{from{opacity:0;transform:translateY(14px)}}
+h2{margin:0 0 10px;font:800 clamp(38px,6vw,72px)/.95 var(--fd);letter-spacing:-.03em}
+.intro{max-width:60ch;color:var(--mut);font-size:18px;margin:0 0 38px}
+section{margin-bottom:46px}
+.day{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:4px}
+.day button{text-align:left;background:var(--sf);border:1px solid var(--ln);padding:10px 12px;border-radius:8px;transition:.25s}
+.day button small{display:block;font:400 11px var(--fm);color:var(--mut)}
+.day button b{font:500 14px/1.3 var(--fd)}
+.day button[aria-selected="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.day button[aria-selected="true"] small{color:var(--bg);opacity:.7}
+.prog{height:3px;background:var(--ln);margin:10px 0}.prog i{display:block;height:100%;background:var(--ac);transition:width .6s}
+.dd{font-size:17px;max-width:60ch;min-height:56px}.dd b{font:500 13px var(--fm);color:var(--ac);display:block}
+.rb{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.rb li{display:flex;gap:14px;background:var(--sf);border:1px solid var(--ln);border-radius:12px;padding:14px 16px}
+.rb li>b{font:800 28px/1 var(--fd);color:var(--ac);min-width:34px}
+.rb h4{margin:0 0 2px;font:800 18px var(--fd)}.rb p{margin:0;color:var(--mut);font-size:14.5px;line-height:1.45}
+.bench{border:1px solid var(--ink);border-radius:14px;background:var(--sf);padding:6px 18px}
+.tq{padding:16px 0;border-top:1px solid var(--ln)}.tq:first-child{border-top:0}
+.q{font:500 19px/1.3 var(--fd);margin:0 0 10px}
+.bt{display:flex;gap:8px;flex-wrap:wrap}
+.bt button{border:1px solid var(--ln);background:var(--bg);padding:6px 16px;border-radius:99px;font:500 13px var(--fm);transition:.2s}
+.bt button:hover:not(:disabled){border-color:var(--ac)}
+.bt button:disabled{cursor:default;opacity:.55}
+.bt button.ok{background:var(--oks);border-color:var(--ok);opacity:1}.bt button.no{background:var(--nos);border-color:var(--no);opacity:1}
+.res{margin:10px 0 0;font-size:14.5px;padding:8px 12px;border-left:3px solid var(--ok);background:var(--oks);border-radius:0 8px 8px 0}
+.res.no{border-color:var(--ac);background:var(--acs)}
+.score{font:500 13px var(--fm);margin:12px 0 10px;color:var(--ac)}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:30px}
+.chips{display:flex;gap:6px;flex-wrap:wrap}.chips span{font:400 12px var(--fm);padding:4px 10px;border:1px solid var(--ln);border-radius:99px;background:var(--sf)}
+.two ul{margin:0;padding:0;list-style:none}.two li{padding:6px 0;border-top:1px solid var(--ln);font-size:15px}.two li:before{content:"↗ ";color:var(--ac)}
+.foot{margin:16px 0;padding-top:16px;border-top:2px solid var(--ink);color:var(--mut);font-size:14px;max-width:70ch}
+.win{border:1px solid var(--ink);border-radius:14px;background:var(--sf);overflow:hidden}
+.wh{display:flex;align-items:center;gap:8px;padding:10px 14px;border-bottom:1px solid var(--ink);font:500 12px var(--fm)}
+.wh i{width:10px;height:10px;border-radius:50%;background:var(--ln)}
+.wh span{margin-left:6px;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.wh em{font-style:normal;background:var(--ac);color:var(--bg);padding:2px 10px;border-radius:99px}
+.wh button{background:none;border:1px solid var(--ln);border-radius:99px;padding:2px 10px;font:inherit}
+.wb{padding:16px;min-height:260px;max-height:330px;overflow:auto}
+.ln{margin:0 0 10px;font-size:14.5px;animation:up .4s}
+.ln code{font:500 12px var(--fm);color:var(--ac);margin-right:10px}
+.bb{margin:0 0 8px;padding:8px 14px;border-radius:14px;max-width:80%;font-size:14.5px;animation:up .4s;background:var(--bg)}
+.bb.m{margin-left:auto;background:var(--ac);color:var(--bg)}
+.bb.n{max-width:100%;font:12px var(--fm);background:var(--oks);border-radius:8px;color:var(--ok)}
+.bd{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.bd small{display:block;font:500 11px var(--fm);text-transform:uppercase;letter-spacing:.08em;color:var(--mut);margin-bottom:6px}
+.bd>div{background:var(--bg);border-radius:10px;padding:8px;min-height:150px}
+.cd{display:block;background:var(--sf);border:1px solid var(--ln);border-radius:8px;padding:7px 9px;margin-bottom:6px;font-size:13px;line-height:1.3}
+.cd.hl{border-color:var(--ac);background:var(--acs);animation:up .4s}
+.cap{margin:12px 0 0;font:500 13px var(--fm);color:var(--ac)}
+@media (min-width:861px){.hero{align-items:center}.hero .meta{transform:translateY(112px)}}
+@media (max-width:560px){.bd{grid-template-columns:1fr 1fr}}
+@media (max-width:860px){.tiles{grid-template-columns:1fr 1fr}.hero{grid-template-columns:1fr}.rb,.two{grid-template-columns:1fr}.day{grid-auto-flow:row}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div class="page">
+  <div class="top"><span class="lab">/run</span><span class="lab live" id="clk">shift in progress</span></div>
+  <header class="hero">
+    <div><h1>How I<span>run it.</span></h1>
+    <p class="lead">Shipping is the starting line. This is how I keep a product alive, people informed and problems small once it is out in the world.</p></div>
+    <dl class="meta"><div><dt>Fields</dt><dd>Resolve, support, coordinate, organise</dd></div><div><dt>Order</dt><dd>Acknowledge, own, fix, follow up, learn</dd></div><div><dt>Output</dt><dd>People who are never left guessing</dd></div></dl>
+  </header>
+  <div class="tick"><div class="trk" id="trk"></div></div>
+  <div class="lab">Pick a verb</div>
+  <div class="tiles" id="tiles"></div>
+  <main id="main"></main>
+  <p class="foot">Tools change every few months. The habit stays the same: acknowledge, own, fix, follow up, learn.</p>
+</div>
+<script>
+const R=[
+{id:"resolve",n:"Resolve",line:"Get them unstuck, then fix the cause.",intro:"After launch the product meets real people. My job is to get them unstuck fast and make sure the same problem never happens twice.",
+day:[["09:00","Queue sweep","Read everything that came in overnight. Spot outages and angry threads before anything else."],["09:45","Urgent first","Anything blocking a customer from working gets handled before the rest."],["11:30","Deep fixes","Reproduce harder bugs, check logs and test fixes properly."],["13:30","Follow-ups","Go back to every customer I promised an update, even if the update is not done."],["15:00","Docs & macros","Turn repeat questions into help articles and saved replies."],["16:30","Handover","Write what is open, blocked and next, for whoever picks it up."]],
+steps:[["Acknowledge","Reply fast with what I understood and when they will hear from me next."],["Reproduce","Try to make it happen myself. A bug I can see is half fixed."],["Isolate","Ask what changed: device, update, account, time. Narrow it down."],["Fix or work around","Fix it, or give a safe workaround so they are not stuck while I dig."],["Confirm","Ask the customer to check it works for them instead of assuming."],["Document","Write it as an article, macro or bug report so the next person starts ahead."]],
+tri:[["“The app is down for my whole team!”",0,"Many people are blocked. I confirm scope, check status, alert engineering and post an update."],["“Password reset email never arrives.”",1,"One person blocked by a known cause. Check spam and email logs, usually a same-day fix."],["“How do I export to CSV?”",1,"Easy answer today. If I see it three times, it becomes a help article."],["“It would look nicer with a blue button.”",2,"Thank them, log it as feedback and tag it for product. Not urgent."]],
+tools:["helpdesk","screen recordings","logs","status page","knowledge base"],watch:["first reply time","time to resolve","tickets reopened","repeat questions turned into docs"]},
+{id:"support",n:"Support",line:"Make people feel heard, then actually help.",intro:"Customers rarely remember the problem. They remember how it felt to be helped. I run conversations so people feel heard and then leave with an answer.",
+day:[["09:00","Inbox & chats","Open the queue. Read waiting and high-value threads first."],["10:30","Live conversations","Calls and chat: listen fully, then answer."],["12:30","Promised callbacks","Close every “I’ll get back to you” I made."],["14:00","Billing & accounts","Refunds, plan changes and account fixes, checked twice."],["15:30","Feedback log","Write down what customers keep asking for and send it to product."],["16:45","Account notes","Update each account so nobody ever makes the customer repeat themselves."]],
+steps:[["Listen first","Let them finish. The real problem often comes out in the last sentence."],["Say it back","Repeat the issue in my words so they know I understood."],["Own it","Say what I will do and by when. No vague promises."],["Fix or route","Solve it myself, or hand it to the right team with the full story."],["Follow up","Come back before they have to chase me."],["Feed it back","Turn patterns into notes for product so the root cause gets fixed."]],
+tri:[["“You charged me twice this month!”",0,"Money and trust. Apologise, verify the charge and start the refund straight away."],["“Do you have an annual plan?”",1,"A simple question with a fast answer. Reply today while they are still interested."],["“Can you build the feature we need?”",1,"Be honest about what exists today and what I can promise. Log the request for product."],["“You saved my day, thank you!”",2,"Say thanks, then save the praise and share it with the team. Never skip it, but no rush."]],
+tools:["CRM","chat & phone","templates","refund process","feedback tracker"],watch:["customer satisfaction","first reply time","issues solved first time","feedback sent to product"]},
+{id:"coordinate",n:"Coordinate",line:"Keep the work moving and the risks visible.",intro:"A launch is the middle of the project, not the end. I keep work moving, risks visible and everyone informed before surprises arrive.",
+day:[["09:15","Standup","Fifteen minutes: what moved, what is stuck, who needs what."],["09:45","Unblock","I chase blocked items first. A blocked task costs the most."],["11:30","Planning","Scope the next piece and cut anything that is not needed."],["13:30","Stakeholder update","A short written update: done, next, risks, decisions needed."],["15:00","Risk review","Look at dates, dependencies and people. What could slip?"],["16:30","Close the day","Update the board so tomorrow starts clean."]],
+steps:[["Define done","Write what finished looks like before any work starts."],["Break it down","Split it into pieces small enough to finish in days."],["Owners & dates","Every task has one name and one date."],["Track blockers","Ask daily what is stuck. Remove it or escalate it."],["Communicate early","Bad news early is a plan. Bad news late is a crisis."],["Review & learn","After each milestone, a short retro: keep, change, stop."]],
+tri:[["“Our lead engineer is sick and launch is Friday.”",0,"The date is at risk. I re-scope today and tell stakeholders before they find out."],["“The vendor dependency is two days late.”",0,"It blocks other work. I contact the vendor now and prepare a fallback."],["“Client wants one more feature mid-sprint.”",1,"Not a flat no. I show the trade-off: adding this means dropping something."],["“Meeting notes need tidying.”",2,"Useful but never urgent. It waits for a quiet hour."]],
+tools:["task board","roadmap","written updates","risk log","retro notes"],watch:["tasks blocked","dates at risk","scope changes","surprises for stakeholders"]},
+{id:"organise",n:"Organise",line:"Take it off their plate and bring it back done.",intro:"I take things off someone’s plate and bring them back done. I protect their time, track the details and tell them what happened.",
+day:[["08:30","Inbox & calendar","Sort mail, spot clashes and prepare the day’s schedule."],["09:30","Check priorities","A quick message to confirm what matters most today."],["10:30","Admin batch","Bookings, forms, invoices and data entry in one block."],["13:00","Research","Compare options and send a short summary, not a pile of links."],["15:00","Follow-ups","Chase replies, confirm meetings and nudge anyone late."],["16:45","Daily summary","Send a short note: done, waiting on, needs a decision."]],
+steps:[["Clarify the ask","What exactly, by when, in what format? One question saves a redo."],["Confirm priority","Check where it sits next to everything else on the list."],["Do it in batches","Group similar tasks so they go faster."],["Double check","Re-read dates, names and amounts before anything is sent."],["Report back","Say it is done and what the result was, not just “done”."],["Make it repeatable","Turn anything I do twice into a checklist or template."]],
+tri:[["“My flight moved and now I clash with a meeting.”",0,"Time sensitive. I check options, propose a new time and warn the other person today."],["“A vendor invoice is due tomorrow.”",1,"Due tomorrow, so I handle it today: confirm, then pay or send for approval."],["“Find a venue for a team dinner next month.”",2,"Plenty of time. I batch the research and send three options."],["“Tidy the shared folder.”",2,"Good for a quiet hour. Never ahead of anything with a date."]],
+tools:["calendar","email","shared docs","booking tools","checklists"],watch:["tasks done on time","clashes caught early","errors after sending","tasks turned into templates"]}];
+const C=["Now","Today","Later"],$=id=>document.getElementById(id);
+let role,cur=0,ap;const rm=matchMedia('(prefers-reduced-motion:reduce)').matches;
+const T=["ticket answered in minutes","deadline moved before it slipped","handover note written","calendar clash caught","repeat question became a help article","stakeholders updated early","refund started before they asked"];
+$('trk').innerHTML=[...T,...T].map(t=>`<span>${t}</span>`).join('');
+$('tiles').innerHTML=R.map((r,i)=>`<button class="tile" data-id="${r.id}"><span class="no">0${i+1}</span><b>${r.n}</b><small>${r.line}</small></button>`).join('');
+document.querySelectorAll('.tile').forEach(b=>b.onclick=()=>show(b.dataset.id));
+function sel(i){cur=i;document.querySelectorAll('.day button').forEach((b,k)=>b.setAttribute('aria-selected',k===i));const d=role.day[i];$('dd').innerHTML=`<b>${d[0]}</b>${d[2]}`;$('pg').style.width=((i+1)/role.day.length*100)+'%'}
+function show(id){
+  role=R.find(r=>r.id===id);clearInterval(ap);
+  document.querySelectorAll('.tile').forEach(b=>b.setAttribute('aria-selected',b.dataset.id===id));
+  $('main').innerHTML=`<h2>${role.n}</h2><p class="intro">${role.intro}</p>
+  <section><p class="lab">A day on shift (click a block)</p><div class="day">${role.day.map((d,i)=>`<button data-i="${i}"><small>${d[0]}</small><b>${d[1]}</b></button>`).join('')}</div><div class="prog"><i id="pg"></i></div><div class="dd" id="dd"></div></section>
+  <section><p class="lab">The runbook</p><ol class="rb">${role.steps.map((s,i)=>`<li><b>0${i+1}</b><div><h4>${s[0]}</h4><p>${s[1]}</p></div></li>`).join('')}</ol></section>
+  <section><p class="lab">Run it yourself: how urgent is it?</p><div class="bench">${role.tri.map((t,i)=>`<div class="tq" data-i="${i}"><p class="q">${t[0]}</p><div class="bt">${C.map((c,k)=>`<button data-k="${k}">${c}</button>`).join('')}</div></div>`).join('')}</div><p class="score" id="sc"></p></section>
+  <section class="two"><div><p class="lab">Toolkit</p><div class="chips">${role.tools.map(t=>`<span>${t}</span>`).join('')}</div></div><div><p class="lab">What I watch</p><ul>${role.watch.map(w=>`<li>${w}</li>`).join('')}</ul></div></section><section><p class="lab">Work in progress · sample, details changed</p><div class="win" id="win"></div></section>`;
+  document.querySelectorAll('.day button').forEach(b=>b.onclick=()=>{clearInterval(ap);sel(+b.dataset.i)});
+  let hit=0,done=0;
+  document.querySelectorAll('.tq').forEach(q=>q.querySelectorAll('button').forEach(b=>b.onclick=()=>{
+    const t=role.tri[+q.dataset.i],k=+b.dataset.k,ok=k===t[1];done++;if(ok)hit++;
+    q.querySelectorAll('button').forEach(x=>{x.disabled=true;if(+x.dataset.k===t[1])x.classList.add('ok')});
+    if(!ok)b.classList.add('no');
+    q.insertAdjacentHTML('beforeend',`<p class="res ${ok?'':'no'}"><b>${ok?'Same call as mine. ':'I would say '+C[t[1]]+'. '}</b>${t[2]}</p>`);
+    $('sc').textContent=`${hit} of ${done} match my call`+(done===role.tri.length?'. Priorities depend on the team, which is why I write them down.':'');
+  }));
+  try{history.replaceState(null,'','#'+id)}catch(e){}
+  sel(0);if(!rm)ap=setInterval(()=>sel((cur+1)%role.day.length),3400);wip();
+}
+const BS=[[0,[[0,1,2,3],[],[],[]],-1,"Start of week: everything sits in To do. Each card gets one owner and one date."],[1,[[3],[0,1],[2],[]],2,"Standup: two moving, vendor assets blocked."],[2,[[3],[0,1,2],[],[]],2,"I chased the vendor, removed the blocker and prepared a fallback."],[3,[[],[1,2,3],[],[0]],0,"Launch checklist done. QA starts."],[4,[[],[],[],[0,1,2,3]],-1,"All shipped. Update sent: done, next, risks, decisions needed."]];
+const OS=[[0,[[0,1,2,3],[],[],[]],-1,"Inbox: four things, all shouting."],[1,[[1,2,3],[0],[],[]],0,"Time-sensitive first: fixing the 3pm clash."],[2,[[2,3],[0,1],[],[]],1,"Invoice is due tomorrow, so it is done today."],[3,[[2],[0,1],[3],[]],3,"Waiting on the client. I will nudge them Thursday."],[4,[[],[0,1],[3],[2]],2,"Venue ideas can wait. Batched for next week."],[5,[[],[0,1],[3],[2]],-1,"Daily summary sent: 2 done, 1 waiting, 1 for later."]];
+const W={
+resolve:{kind:"log",title:"Ticket #2048 · Checkout fails on Safari",st:["Open","Investigating","Fix sent","Resolved"],steps:[[0,"09:02","Ticket received: “The checkout button does nothing on my iPhone.”"],[0,"09:04","Replied: “I can see it, looking now. You will hear from me by 10:00.”"],[1,"09:20","Reproduced on Safari 17. Chrome works fine."],[1,"09:35","Cause found: a recent update blocks the payment script."],[2,"09:50","Sent a workaround and flagged the bug to engineering with steps to reproduce."],[3,"10:15","Customer confirmed it works. Ticket closed."],[3,"10:25","Wrote a help article and a saved reply for next time."]]},
+support:{kind:"chat",title:"Chat · Billing question",st:["Waiting","Listening","Helping","Resolved"],steps:[[0,"c","I was charged twice and nobody answered my email."],[1,"m","I’m sorry, that’s frustrating. Let me look at your account now."],[2,"m","Found it: a duplicate charge on the 3rd. I’ve started the refund."],[2,"m","It should show in 3 to 5 days. I’ll message you on Friday to check."],[3,"c","Thank you, that’s a relief!"],[3,"n","Account note saved: refund started, follow up Friday."]]},
+coordinate:{kind:"board",title:"Launch board · Week 3",st:["Kickoff","Standup","Unblocked","Moving","Shipped"],cols:["To do","Doing","Blocked","Done"],cards:["Launch checklist","API integration","Vendor assets","QA pass"],steps:BS},
+organise:{kind:"board",title:"Today · Inbox sorted",st:["Messy inbox","Triaged","Handled","Waiting","Sorted","Summary sent"],cols:["Inbox","Today","Waiting","Later"],cards:["Flight moved: clash at 3pm","Vendor invoice due tomorrow","Venue ideas for dinner","Client reply pending"],steps:OS}};
+let wt,wi=0,wio;
+function wtick(once){
+  const w=W[role.id],wb=$('wb');if(!wb)return;const n=w.steps.length;
+  if(wi===0&&w.kind!=='board')wb.innerHTML='';
+  const s=w.steps[wi];$('pill').textContent=w.st[s[0]];
+  if(w.kind==='log')wb.insertAdjacentHTML('beforeend',`<p class="ln"><code>${s[1]}</code>${s[2]}</p>`);
+  else if(w.kind==='chat')wb.insertAdjacentHTML('beforeend',`<p class="bb ${s[1]}">${s[2]}</p>`);
+  else wb.innerHTML=`<div class="bd">${w.cols.map((c,ci)=>`<div><small>${c}</small>${s[1][ci].map(k=>`<span class="cd${k===s[2]?' hl':''}">${w.cards[k]}</span>`).join('')}</div>`).join('')}</div><p class="cap">${s[3]}</p>`;
+  wb.scrollTop=wb.scrollHeight;wi++;const last=wi>=n;if(last)wi=0;
+  if(!once)wt=setTimeout(wtick,last?4000:1500);
+}
+function wip(){
+  clearTimeout(wt);if(wio)wio.disconnect();wi=0;const el=$('win');
+  el.innerHTML=`<div class="wh"><i></i><i></i><i></i><span>${W[role.id].title}</span><em id="pill"></em><button id="rp">↻ replay</button></div><div class="wb" id="wb"></div>`;
+  $('rp').onclick=()=>{clearTimeout(wt);wi=0;wtick()};
+  if(rm){const n=W[role.id].steps.length;for(let i=0;i<n;i++)wtick(true);return}
+  if(window.IntersectionObserver){wio=new IntersectionObserver(e=>{if(e[0].isIntersecting){wio.disconnect();wtick()}});wio.observe(el)}else wtick();
+}
+const st=location.hash.slice(1);show(R.some(r=>r.id===st)?st:'resolve');
+</script>
+</body>
+</html>
