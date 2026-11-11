@@ -12,12 +12,16 @@ const projects = [
   { number: '03', title: 'Open Air', type: 'Brand world', year: '2023', color: 'mint', desc: 'A luminous identity system for a community moving culture forward.' },
 ]
 
+function scrollToSection(id: string) {
+  document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+}
+
 function Nav({ active, setActive, music, setMusic, showTip, onDismissTip }: { active: string; setActive: (s: string) => void; music: boolean; setMusic: (v: boolean) => void; showTip: boolean; onDismissTip: () => void }) {
   return <>
     <aside className="float-nav">
       <div className="nav-mark">A<span>/</span>R</div>
       <div className="nav-links">
-        {['about', 'projects', 'contact'].map((item) => <a key={item} className={active === item ? 'active' : ''} href={`#${item}`} onClick={() => setActive(item)}>{item}</a>)}
+        {['about', 'projects', 'contact'].map((item) => <button key={item} type="button" className={active === item ? 'active' : ''} onClick={() => { setActive(item); scrollToSection(item) }}>{item}</button>)}
       </div>
       <button className={`audio-pill ${music ? 'playing' : ''}`} onClick={() => setMusic(!music)} aria-label="Toggle audio">
         <span className="audio-dot">{music ? <Volume2 size={13} /> : <Headphones size={13} />}</span>
@@ -145,7 +149,7 @@ function MiniGame() {
 }
 
 export default function Portfolio() {
-  const [active, setActive] = useState('projects')
+  const [active, setActive] = useState('')
   const [music, setMusic] = useState(false)
   const [playing, setPlaying] = useState(true)
   const [showTip, setShowTip] = useState(true)
@@ -161,6 +165,29 @@ export default function Portfolio() {
     })
 
     Promise.all([preload(soccerImage.src), preload(guitarImage.src)]).then(() => setImagesReady(true))
+  }, [])
+
+  useEffect(() => {
+    const updateActiveSection = () => {
+      const activationPoint = window.scrollY + window.innerHeight * 0.35
+      let current = ''
+
+      for (const id of ['about', 'projects', 'contact']) {
+        const section = document.getElementById(id)
+        if (section && section.offsetTop <= activationPoint) current = id
+      }
+
+      setActive(current)
+    }
+
+    updateActiveSection()
+    window.addEventListener('scroll', updateActiveSection, { passive: true })
+    window.addEventListener('resize', updateActiveSection)
+
+    return () => {
+      window.removeEventListener('scroll', updateActiveSection)
+      window.removeEventListener('resize', updateActiveSection)
+    }
   }, [])
 
   useEffect(() => {
@@ -236,7 +263,7 @@ export default function Portfolio() {
         <div className="eyebrow"><span>01</span> creative developer / athlete / musician</div>
         <h1>MAKE<br /><em>NOISE.</em><br /><span>MOVE</span> CULTURE.</h1>
         <p className="hero-intro">I&apos;m Alexa Rivera — a creative developer building digital worlds with code, rhythm, and a little competitive spirit.</p>
-        <a href="#projects" className="enter-link"><span className="enter-icon"><ArrowUpRight size={18} /></span> ENTER EXPERIENCE</a>
+        <button type="button" className="enter-link" onClick={() => scrollToSection('projects')}><span className="enter-icon"><ArrowUpRight size={18} /></span> ENTER EXPERIENCE</button>
         <div className="scroll-cue"><span /> scroll to explore</div>
       </div>
       <div className="hero-scene"><AvatarScene music={music} ready={imagesReady} /><div className="vertical-type">SELECTED WORK / 2023—24</div></div>
