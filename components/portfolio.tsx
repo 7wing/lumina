@@ -226,22 +226,23 @@ export default function Portfolio() {
     }
   }, [])
 
-  const playAudio = useCallback((muted: boolean) => {
+  const playAudio = useCallback((muted: boolean, preserveIntentOnFailure = false) => {
     const audio = audioRef.current
     if (!audio) return
 
     const request = ++audioRequestRef.current
+    const retryWhenReady = muted && !homeReadyRef.current
     setAudioEnabled(true)
     audio.muted = muted
     setAudioError(null)
     void audio.play().catch((error: unknown) => {
       if (request !== audioRequestRef.current) return
-      if (muted && !homeReadyRef.current) return
+      if (retryWhenReady) return
       console.error('Unable to play the audio track.', error)
-      setAudioEnabled(false)
       setAudioPlaying(false)
       setAudioError('Unable to play the audio track.')
       audio.pause()
+      if (!preserveIntentOnFailure) setAudioEnabled(false)
     })
   }, [])
 
@@ -249,14 +250,14 @@ export default function Portfolio() {
     const audio = audioRef.current
     if (!audio) return
 
-    if (audioEnabled) {
+    if (!audio.paused) {
       audioRequestRef.current += 1
       setAudioEnabled(false)
       audio.pause()
     } else {
       playAudio(false)
     }
-  }, [audioEnabled, playAudio])
+  }, [playAudio])
 
   const setAudioFromLoading = useCallback((playing: boolean) => {
     setAudioEnabled(playing)
@@ -292,6 +293,24 @@ export default function Portfolio() {
       if (audio.paused) {
         playAudio(false)
       }
+    }
+  }, [audioEnabled, homeReady, playAudio])
+
+  useEffect(() => {
+    const resumeAudio = () => {
+      const audio = audioRef.current
+      if (document.visibilityState === 'visible' && audioEnabled && audio?.paused) {
+        playAudio(!homeReady, true)
+      }
+    }
+
+    document.addEventListener('visibilitychange', resumeAudio)
+    window.addEventListener('pageshow', resumeAudio)
+    window.addEventListener('focus', resumeAudio)
+    return () => {
+      document.removeEventListener('visibilitychange', resumeAudio)
+      window.removeEventListener('pageshow', resumeAudio)
+      window.removeEventListener('focus', resumeAudio)
     }
   }, [audioEnabled, homeReady, playAudio])
 
@@ -441,13 +460,8 @@ export default function Portfolio() {
       muted={!homeReady}
       preload="metadata"
       loop
-      onPlay={() => { setAudioPlaying(true); setAudioError(null) }}
-      onPause={(event) => {
-        if (event.currentTarget.paused) {
-          setAudioPlaying(false)
-          setAudioEnabled(false)
-        }
-      }}
+      onPlay={() => { setAudioPlaying(true); setAudioEnabled(true); setAudioError(null) }}
+      onPause={() => setAudioPlaying(false)}
       onEnded={() => { setAudioPlaying(false); setAudioEnabled(false) }}
       onTimeUpdate={(event) => setAudioCurrentTime(event.currentTarget.currentTime)}
       onLoadedMetadata={(event) => setAudioDuration(event.currentTarget.duration)}
@@ -457,7 +471,7 @@ export default function Portfolio() {
       }}
       onError={() => { setAudioPlaying(false); setAudioEnabled(false); setAudioError('Unable to load the audio track.') }}
     />
-    <Nav active={active} setActive={setActive} playing={audioEnabled} toggleAudio={toggleAudio} />
+    <Nav active={active} setActive={setActive} playing={audioPlaying} toggleAudio={toggleAudio} />
     <section ref={(node) => { panelRefs.current[0] = node }} className="hero panel hero-panel" id="top">
       <div className="hero-copy">
         <div className="eyebrow"><span>01</span> technical generalist / athlete / musician</div>
@@ -482,7 +496,7 @@ export default function Portfolio() {
 
     <section ref={(node) => { panelRefs.current[3] = node }} className="contact panel contact-panel" id="contact">
       <div className="contact-top"><div className="section-kicker">04 — OPEN CHANNEL</div><div className="signal">● signal is strong</div></div>
-      <div className="contact-grid"><div><h2>LET&apos;S MAKE<br /><em>SOMETHING</em><br />UNEXPECTED.</h2><a className="email-link" href="mailto:marthakamau0001@gmail.com">marthakamau0001@gmail.com <ArrowUpRight size={18} /></a></div><div className="audio-card"><div className="audio-card-top"><span><Music2 size={15} /> CURRENTLY PLAYING</span><span>{formatTime(audioCurrentTime)} / {formatTime(audioDuration)}</span></div><div className="track-title">Guitar Music <small>— Kiravale Pixabay</small></div><Equalizer active={audioPlaying} /><div className="audio-controls"><button type="button" onClick={toggleAudio} aria-label={audioEnabled ? 'Pause track' : 'Play track'} aria-pressed={audioEnabled}>{audioEnabled ? <Pause size={17} /> : <Play size={17} />}</button><input className="track-seek" type="range" min="0" max={audioDuration || 0} step="0.1" value={audioDuration ? Math.min(audioCurrentTime, audioDuration) : 0} onInput={(event) => seekAudio(event.currentTarget.valueAsNumber)} onChange={(event) => seekAudio(event.currentTarget.valueAsNumber)} aria-label="Seek through track" aria-valuetext={`${formatTime(audioCurrentTime)} of ${formatTime(audioDuration)}`} disabled={!Number.isFinite(audioDuration) || audioDuration <= 0} style={{ '--seek-progress': `${audioDuration ? (audioCurrentTime / audioDuration) * 100 : 0}%` } as React.CSSProperties} /></div>{audioError && <p className="audio-error" role="status">{audioError}</p>}</div></div>
+      <div className="contact-grid"><div><h2>LET&apos;S MAKE<br /><em>SOMETHING</em><br />UNEXPECTED.</h2><a className="email-link" href="mailto:marthakamau0001@gmail.com">marthakamau0001@gmail.com <ArrowUpRight size={18} /></a></div><div className="audio-card"><div className="audio-card-top"><span><Music2 size={15} /> CURRENTLY PLAYING</span><span>{formatTime(audioCurrentTime)} / {formatTime(audioDuration)}</span></div><div className="track-title">Guitar Music <small>— Kiravale Pixabay</small></div><Equalizer active={audioPlaying} /><div className="audio-controls"><button type="button" onClick={toggleAudio} aria-label={audioPlaying ? 'Pause track' : 'Play track'} aria-pressed={audioPlaying}>{audioPlaying ? <Pause size={17} /> : <Play size={17} />}</button><input className="track-seek" type="range" min="0" max={audioDuration || 0} step="0.1" value={audioDuration ? Math.min(audioCurrentTime, audioDuration) : 0} onInput={(event) => seekAudio(event.currentTarget.valueAsNumber)} onChange={(event) => seekAudio(event.currentTarget.valueAsNumber)} aria-label="Seek through track" aria-valuetext={`${formatTime(audioCurrentTime)} of ${formatTime(audioDuration)}`} disabled={!Number.isFinite(audioDuration) || audioDuration <= 0} style={{ '--seek-progress': `${audioDuration ? (audioCurrentTime / audioDuration) * 100 : 0}%` } as React.CSSProperties} /></div>{audioError && <p className="audio-error" role="status">{audioError}</p>}</div></div>
     </section>
     <section className="page-end" aria-label="End of page">
       <MiniGame />
