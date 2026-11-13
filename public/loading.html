@@ -23,10 +23,7 @@ h1 span{display:block}
 h1 .c{color:var(--coral)}
 h1 .o{color:transparent; -webkit-text-stroke:2px var(--paper)}
 .bio{margin:0; max-width:34ch; color:var(--muted); font-size:clamp(15px,1.6vw,18px); line-height:1.7}
-.cta{display:flex; align-items:center; gap:16px; font-size:13px; letter-spacing:.18em; background:none; border:0; color:var(--paper); padding:0; cursor:pointer; font-family:inherit; font-weight:500}
-.cta[hidden]{display:none}
 .slot{display:flex; justify-content:flex-end; align-items:flex-start; min-height:44px}
-.cta i{width:44px; height:44px; border-radius:50%; background:var(--coral); display:grid; place-items:center; font-style:normal; font-size:22px; color:var(--bg)}
 button:focus-visible{outline:3px solid var(--teal); outline-offset:3px}
 .right{min-height:100vh; position:relative; background:linear-gradient(160deg,var(--panel),var(--panel2)); overflow:hidden; display:flex; flex-direction:column; justify-content:center; padding:clamp(24px,4vw,56px) clamp(16px,4vw,48px) clamp(24px,4vw,56px) clamp(16px,9vw,130px)}
 .right::before{content:""; position:absolute; inset:0; background-image:linear-gradient(rgba(255,255,255,.05) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.05) 1px,transparent 1px); background-size:44px 44px}
@@ -86,8 +83,6 @@ button:focus-visible{outline:3px solid var(--teal); outline-offset:3px}
   .pct{font-size:clamp(46px,15vw,64px)}
   .status{font-size:clamp(9px,2.7vw,12px);letter-spacing:.12em;padding-top:0}
   .slot{min-width:0;min-height:36px}
-  .cta{font-size:10px;gap:8px}
-  .cta i{width:36px;height:36px;font-size:18px}
 }
 @media (prefers-reduced-motion:reduce){.string.hit,.goal.show,.board.kick,.note-deco,.spark{animation:none}.goal.show{opacity:1}}
 .right>.fx{position:absolute; inset:0; z-index:0; overflow:hidden; pointer-events:none}
@@ -115,7 +110,7 @@ button:focus-visible{outline:3px solid var(--teal); outline-offset:3px}
     </div>
     <div class="meter">
       <div class="pct" id="pct">0%</div>
-      <div class="slot"><div class="status" id="status" aria-live="polite">WARMING UP</div><button class="cta" id="again" type="button" hidden><i>↻</i>RUN IT BACK</button></div>
+      <div class="slot"><div class="status" id="status" aria-live="polite">WARMING UP</div></div>
     </div>
   </section>
 </main>
@@ -242,11 +237,10 @@ window.addEventListener('message',function(event){
 
 var STAGES=[[0,'Warming up'],[18,'Tuning the strings'],[40,'Finding space'],[65,'Playing it through'],[88,'Lining up the shot'],[100,'It’s in']];
 var st=document.getElementById('status'), pct=document.getElementById('pct'), pb=document.getElementById('board'),
-    goal=document.getElementById('goal'), again=document.getElementById('again');
-var p=0, t0=0, lit=0, aud=0, running=false, raf=0, handoffTimer=0, runId=0;
+    goal=document.getElementById('goal');
+var p=0, t0=0, lit=0, aud=0, running=false, raf=0, runId=0;
 function reset(){
-  if(handoffTimer){clearTimeout(handoffTimer); handoffTimer=0;}
-  runId++; p=0; lit=0; aud=0; t0=0; running=true; again.hidden=true; st.style.display=''; goal.classList.remove('show');
+  runId++; p=0; lit=0; aud=0; t0=0; running=true; st.style.display=''; goal.classList.remove('show');
   notes.forEach(function(n){n.classList.remove('on')}); draw();
   cancelAnimationFrame(raf); raf=requestAnimationFrame(tick);
 }
@@ -310,10 +304,9 @@ function tick(ts){
   var pos=p*LOOPS*N, total=LOOPS*N;
   while(lit<total && pos>=lit+0.5){ fire(lit,pos-lit<2); lit++; }
   draw();
-  if(p>=1){running=false; crash(); goal.classList.add('show'); again.hidden=false; st.style.display='none'; var completedRun=runId; handoffTimer=window.setTimeout(function(){handoffTimer=0; if(!running&&runId===completedRun) window.parent.postMessage({type:'lumina-loading-complete',runId:completedRun},window.location.origin);},2000); return;}
+  if(p>=1){running=false; crash(); goal.classList.add('show'); st.style.display='none'; window.parent.postMessage({type:'lumina-loading-complete',runId:runId},window.location.origin); return;}
   raf=requestAnimationFrame(tick);
 }
-again.onclick=reset;
 window.addEventListener('resize',draw);
 
 // Audio starts off so nobody gets surprised. Tapping the audio button turns it on

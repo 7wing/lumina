@@ -212,6 +212,8 @@ export default function Portfolio() {
   const audioRequestRef = useRef(0)
   const lenisRef = useRef<Lenis | null>(null)
   const homeReady = loadingFinished && imagesReady
+  const homeReadyRef = useRef(homeReady)
+  homeReadyRef.current = homeReady
 
   useEffect(() => {
     const audio = audioRef.current
@@ -234,6 +236,7 @@ export default function Portfolio() {
     setAudioError(null)
     void audio.play().catch((error: unknown) => {
       if (request !== audioRequestRef.current) return
+      if (muted && !homeReadyRef.current) return
       console.error('Unable to play the audio track.', error)
       setAudioEnabled(false)
       setAudioPlaying(false)
@@ -288,9 +291,6 @@ export default function Portfolio() {
     if (homeReady && audioEnabled) {
       if (audio.paused) {
         playAudio(false)
-      } else {
-        audio.currentTime = 0
-        setAudioCurrentTime(0)
       }
     }
   }, [audioEnabled, homeReady, playAudio])
