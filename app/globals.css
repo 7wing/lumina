@@ -136,7 +136,7 @@ button, input, textarea { font:inherit; }
 .demo-links-dialog-header { display:flex; justify-content:space-between; align-items:flex-start; gap:20px; padding-bottom:16px; border-bottom:1px solid #dfe7e1; }
 .demo-links-dialog-header span { color:#167a48; font-size:9px; font-weight:700; letter-spacing:1.6px; }
 .demo-links-dialog-header h2 { margin:10px 0 0; font-size:clamp(30px,5vw,56px); line-height:.9; font-weight:800; letter-spacing:-.07em; }
-.demo-links-dialog-header p { max-width:42ch; margin:10px 0 0; color:#5f6862; font-size:12px; line-height:1.5; }
+.demo-links-dialog-header p { margin:10px 0 0; color:#5f6862; font-size:12px; line-height:1.5; }
 .demo-links-dialog-header button { display:grid; place-items:center; width:40px; height:40px; border:1px solid #dfe7e1; border-radius:50%; background:#fff; color:#111; cursor:pointer; transition:background .2s ease,color .2s ease,border-color .2s ease; }
 .demo-links-dialog-header button:hover { border-color:#167a48; background:#167a48; color:#fff; }
 .demo-links-dialog-header button:focus-visible { outline:2px solid #167a48; outline-offset:3px; }

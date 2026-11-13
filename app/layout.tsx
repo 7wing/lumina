@@ -3,8 +3,8 @@ import type { Metadata, Viewport } from 'next'
 import './globals.css'
 
 export const metadata: Metadata = {
-  title: 'Alexa Rivera — Creative Developer',
-  description: 'Portfolio of Alexa Rivera, a creative developer building digital worlds with code, rhythm, and competitive spirit.',
+  title: 'Martha Kamau - Creative Developer',
+  description: 'Portfolio of Martha Kamau, a creative developer building digital worlds with code, rhythm and competitive spirit.',
   generator: 'v0.app',
   icons: {
     icon: [

@@ -8,9 +8,9 @@ import guitarImage from '@/images/no_bg_guitar.png'
 import soccerImage from '@/images/no_bg_soccer.png'
 
 const projects = [
-  { number: '01', title: 'Field Notes', type: 'Digital experience', year: '2024', color: 'coral', src: '/run.html', desc: 'A tactile archive for the rituals, rivalries, and poetry of the beautiful game.' },
-  { number: '02', title: 'Sonic Bloom', type: 'Creative technology', year: '2023', color: 'lavender', src: '/investigate.html', desc: 'A generative music visualizer where every beat grows into a new landscape.' },
-  { number: '03', title: 'Open Air', type: 'Brand world', year: '2023', color: 'mint', src: '/build.html', desc: 'A luminous identity system for a community moving culture forward.' },
+  { number: '01', title: 'Operations Notes', type: 'Operations experience', year: '2026', color: 'coral', src: '/run.html', desc: 'Answering, automating and launching, so people never get stuck and work keeps flowing.' },
+  { number: '02', title: 'Quality Assurance', type: 'Cybersecurity technology', year: '2026', color: 'lavender', src: '/investigate.html', desc: 'Testing, attacking and judging AI systems, then reporting what I found and what to fix.' },
+  { number: '03', title: 'Open Source', type: 'Software Development', year: '2026', color: 'mint', src: '/build.html', desc: 'A working tool, its identity, a promo and the story behind it, all made to be used.' },
 ]
 
 const demoLinks = [
@@ -70,7 +70,7 @@ function formatTime(seconds: number) {
 function Nav({ active, setActive, playing, toggleAudio }: { active: string; setActive: (s: string) => void; playing: boolean; toggleAudio: () => void }) {
   return <>
     <aside className="float-nav">
-      <div className="nav-mark">A<span>/</span>R</div>
+      <div className="nav-mark">M<span>/</span>K</div>
       <div className="nav-links">
         {['about', 'projects', 'contact'].map((item) => <button key={item} type="button" className={active === item ? 'active' : ''} onClick={() => { setActive(item); scrollToSection(item) }}>{item}</button>)}
       </div>
@@ -460,9 +460,9 @@ export default function Portfolio() {
     <Nav active={active} setActive={setActive} playing={audioEnabled} toggleAudio={toggleAudio} />
     <section ref={(node) => { panelRefs.current[0] = node }} className="hero panel hero-panel" id="top">
       <div className="hero-copy">
-        <div className="eyebrow"><span>01</span> creative developer / athlete / musician</div>
+        <div className="eyebrow"><span>01</span> technical generalist / athlete / musician</div>
         <h1>MAKE<br /><em>NOISE.</em><br /><span>MOVE</span> CULTURE.</h1>
-        <p className="hero-intro">I&apos;m Alexa Rivera — a creative developer building digital worlds with code, rhythm, and a little competitive spirit.</p>
+        <p className="hero-intro">I&apos;m Martha Kamau, a technical generalist building digital worlds with code, rhythm and a little competitive spirit.</p>
         <button type="button" className="enter-link" onClick={() => scrollToSection('projects')}><span className="enter-icon"><ArrowUpRight size={18} /></span> ENTER EXPERIENCE</button>
         <div className="scroll-cue"><span /> scroll to explore</div>
       </div>
@@ -471,7 +471,7 @@ export default function Portfolio() {
 
     <section ref={(node) => { panelRefs.current[1] = node }} className="about panel about-panel" id="about">
       <div className="section-kicker">02 — THE PRACTICE</div>
-      <div className="about-grid"><h2>DISCIPLINE<br />MEETS <em>PLAY.</em></h2><div className="about-copy"><p>There&apos;s a particular magic in the space between structure and spontaneity. I find it on the pitch, in a rehearsal room, and inside a new line of code.</p><p>My work lives at that intersection — making identities, interfaces, and experiences that feel as good as they function.</p><div className="location"><MapPin size={15} /> Brooklyn, NY <span>—</span> available worldwide</div></div></div>
+      <div className="about-grid"><h2>DISCIPLINE<br />MEETS <em>PLAY.</em></h2><div className="about-copy"><p>There&apos;s a particular magic in the space between structure and spontaneity. I find it on the pitch, in a rehearsal room and inside a new line of code.</p><p>My work lives at that intersection of making identities, interfaces and experiences that feel as good as they function.</p><div className="location"><MapPin size={15} /> Nairobi, KE - available remotely worldwide</div></div></div>
       <div className="orbit-word">RHYTHM / RIGOR / RISK / REPEAT /</div>
     </section>
 
@@ -482,12 +482,12 @@ export default function Portfolio() {
 
     <section ref={(node) => { panelRefs.current[3] = node }} className="contact panel contact-panel" id="contact">
       <div className="contact-top"><div className="section-kicker">04 — OPEN CHANNEL</div><div className="signal">● signal is strong</div></div>
-      <div className="contact-grid"><div><h2>LET&apos;S MAKE<br /><em>SOMETHING</em><br />UNEXPECTED.</h2><a className="email-link" href="mailto:hello@alexarivera.studio">hello@alexarivera.studio <ArrowUpRight size={18} /></a></div><div className="audio-card"><div className="audio-card-top"><span><Music2 size={15} /> CURRENTLY PLAYING</span><span>{formatTime(audioCurrentTime)} / {formatTime(audioDuration)}</span></div><div className="track-title">Late Bloomer <small>— Alexa Rivera</small></div><Equalizer active={audioPlaying} /><div className="audio-controls"><button type="button" onClick={toggleAudio} aria-label={audioEnabled ? 'Pause track' : 'Play track'} aria-pressed={audioEnabled}>{audioEnabled ? <Pause size={17} /> : <Play size={17} />}</button><input className="track-seek" type="range" min="0" max={audioDuration || 0} step="0.1" value={audioDuration ? Math.min(audioCurrentTime, audioDuration) : 0} onInput={(event) => seekAudio(event.currentTarget.valueAsNumber)} onChange={(event) => seekAudio(event.currentTarget.valueAsNumber)} aria-label="Seek through track" aria-valuetext={`${formatTime(audioCurrentTime)} of ${formatTime(audioDuration)}`} disabled={!Number.isFinite(audioDuration) || audioDuration <= 0} style={{ '--seek-progress': `${audioDuration ? (audioCurrentTime / audioDuration) * 100 : 0}%` } as React.CSSProperties} /></div>{audioError && <p className="audio-error" role="status">{audioError}</p>}</div></div>
+      <div className="contact-grid"><div><h2>LET&apos;S MAKE<br /><em>SOMETHING</em><br />UNEXPECTED.</h2><a className="email-link" href="mailto:marthakamau0001@gmail.com">marthakamau0001@gmail.com <ArrowUpRight size={18} /></a></div><div className="audio-card"><div className="audio-card-top"><span><Music2 size={15} /> CURRENTLY PLAYING</span><span>{formatTime(audioCurrentTime)} / {formatTime(audioDuration)}</span></div><div className="track-title">Guitar Music <small>— Kiravale Pixabay</small></div><Equalizer active={audioPlaying} /><div className="audio-controls"><button type="button" onClick={toggleAudio} aria-label={audioEnabled ? 'Pause track' : 'Play track'} aria-pressed={audioEnabled}>{audioEnabled ? <Pause size={17} /> : <Play size={17} />}</button><input className="track-seek" type="range" min="0" max={audioDuration || 0} step="0.1" value={audioDuration ? Math.min(audioCurrentTime, audioDuration) : 0} onInput={(event) => seekAudio(event.currentTarget.valueAsNumber)} onChange={(event) => seekAudio(event.currentTarget.valueAsNumber)} aria-label="Seek through track" aria-valuetext={`${formatTime(audioCurrentTime)} of ${formatTime(audioDuration)}`} disabled={!Number.isFinite(audioDuration) || audioDuration <= 0} style={{ '--seek-progress': `${audioDuration ? (audioCurrentTime / audioDuration) * 100 : 0}%` } as React.CSSProperties} /></div>{audioError && <p className="audio-error" role="status">{audioError}</p>}</div></div>
     </section>
     <section className="page-end" aria-label="End of page">
       <MiniGame />
     </section>
-    <footer className="page-footer"><span>© 2024 ALEXA RIVERA</span><span>CREATIVE DEVELOPER / NYC</span><span>IG / LI / ARE.NA</span></footer>
+    <footer className="page-footer"><span>© 2026 MARTHA KAMAU</span><span>CREATIVE DEVELOPER / NBO</span><span>RUN / INVESTIGATE / BUILD</span></footer>
     <dialog ref={projectDialogRef} className="project-dialog" aria-label="Project preview" onClose={() => setSelectedProject(null)} onClick={(event) => { if (event.target === event.currentTarget) event.currentTarget.close() }}>
       <div className="project-dialog-content">
         {selectedProject && <iframe key={selectedProject.src} src={selectedProject.src} title={selectedProject.title} />}
