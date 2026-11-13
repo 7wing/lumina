@@ -1,8 +1,9 @@
 'use client'
 
 import Lenis from 'lenis'
-import { useEffect, useRef, useState } from 'react'
-import { ArrowUpRight, Headphones, Mail, MapPin, Music2, Pause, Play, Volume2 } from 'lucide-react'
+import { useCallback, useEffect, useRef, useState } from 'react'
+import { ArrowUpRight, Headphones, Mail, MapPin, Music2, Pause, Play, Volume2, X } from 'lucide-react'
+import LoadingBridge from '@/components/loading-bridge'
 import guitarImage from '@/images/no_bg_guitar.png'
 import soccerImage from '@/images/no_bg_soccer.png'
 
@@ -12,20 +13,70 @@ const projects = [
   { number: '03', title: 'Open Air', type: 'Brand world', year: '2023', color: 'mint', src: '/build.html', desc: 'A luminous identity system for a community moving culture forward.' },
 ]
 
+const demoLinks = [
+  'https://afadhali.vercel.app/',
+  'https://truckstock-blitz.vercel.app/',
+  'https://waste-to-worth-finder.vercel.app/',
+  'https://global-stage-hub.vercel.app/',
+  'https://cozy-quest-companion.vercel.app/',
+  'https://cozycorner-journal.vercel.app/',
+  'https://cozy-corner-eosin.vercel.app/',
+  'https://quiet-harmony.vercel.app/',
+  'https://elevated-living.vercel.app/',
+  'https://aureum-opulence.vercel.app/',
+  'https://clat-cellar.vercel.app/',
+  'https://desk-shrine-curator.vercel.app/',
+  'https://the-watchmaker-s-vault.vercel.app/',
+  'https://slang-night-market.vercel.app/',
+  'https://reloquest-atlas.vercel.app/',
+  'https://bug-snap-report.vercel.app/',
+  'https://tape-den-collective.vercel.app/',
+  'https://vinyl-sanctuary.vercel.app/',
+  'https://film-alchemy.vercel.app/',
+  'https://ink-alchemist.vercel.app/codex',
+  'https://mirror-paths.vercel.app/',
+  'https://after-the-reel.vercel.app/',
+  'https://deep-sea-feasts.vercel.app/',
+  'https://fridge-friend-chi.vercel.app/',
+  'https://the-skill-binder.vercel.app/',
+  'https://craft-connect-coral.vercel.app/',
+  'https://botanical-color-lab.vercel.app/',
+  'https://quest-compass-indol.vercel.app/',
+  'https://the-collector-s-bench.vercel.app/',
+  'https://neon-party-arena.vercel.app/',
+  'https://kodachrome-glow.vercel.app/',
+  'https://buckle-alps-lab.vercel.app/',
+  'https://indie-dev-hub.vercel.app/',
+  'https://pixel-nexus.vercel.app/',
+  'https://clay-haven-loft.vercel.app/',
+  'https://grove-sanctuary.vercel.app/',
+  'https://bound-heirloom.vercel.app/',
+  'https://steady-flow-orpin.vercel.app/',
+  'https://hobby-connect-hub-pi.vercel.app/',
+  'https://vitalvault-power.vercel.app/',
+]
+
 function scrollToSection(id: string) {
   document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
 }
 
-function Nav({ active, setActive, music, playing, setMusic }: { active: string; setActive: (s: string) => void; music: boolean; playing: boolean; setMusic: (v: boolean) => void }) {
+function formatTime(seconds: number) {
+  if (!Number.isFinite(seconds) || seconds < 0) return '00:00'
+  const minutes = Math.floor(seconds / 60)
+  const remainder = Math.floor(seconds % 60)
+  return `${String(minutes).padStart(2, '0')}:${String(remainder).padStart(2, '0')}`
+}
+
+function Nav({ active, setActive, playing, toggleAudio }: { active: string; setActive: (s: string) => void; playing: boolean; toggleAudio: () => void }) {
   return <>
     <aside className="float-nav">
       <div className="nav-mark">A<span>/</span>R</div>
       <div className="nav-links">
         {['about', 'projects', 'contact'].map((item) => <button key={item} type="button" className={active === item ? 'active' : ''} onClick={() => { setActive(item); scrollToSection(item) }}>{item}</button>)}
       </div>
-      <button className={`audio-pill ${music ? 'playing' : ''}`} onClick={() => setMusic(!music)} aria-label="Toggle audio">
-        <span className="audio-dot">{music ? <Volume2 size={13} /> : <Headphones size={13} />}</span>
-        <span>{!playing ? 'PAUSED' : music ? 'NOW PLAYING' : 'AUDIO OFF'}</span>
+      <button className={`audio-pill ${playing ? 'playing' : ''}`} onClick={toggleAudio} aria-label={playing ? 'Pause audio' : 'Play audio'} aria-pressed={playing}>
+        <span className="audio-dot">{playing ? <Volume2 size={13} /> : <Headphones size={13} />}</span>
+        <span>{playing ? 'NOW PLAYING' : 'AUDIO OFF'}</span>
       </button>
     </aside>
   </>
@@ -43,12 +94,12 @@ function AvatarScene({ music, ready }: { music: boolean; ready: boolean }) {
         <img src={guitarImage.src} alt={music ? 'guitar mode' : ''} aria-hidden={!music} className={`character-image guitar-image ${ready && music ? 'is-active' : ''}`} loading="eager" draggable={false} fetchPriority="high" />
       </div>
     </div>
-    <div className="floating-note note-one">♪</div><div className="floating-note note-two">✦</div>
+    <div className="floating-note note-one">♪</div><div className="floating-note note-two">♫</div>
   </div>
 }
 
 function Equalizer({ active }: { active: boolean }) {
-  return <div className={`equalizer ${active ? 'eq-active' : ''}`}>{Array.from({ length: 24 }).map((_, i) => <i key={i} style={{ '--i': i } as React.CSSProperties} />)}</div>
+  return <div className={`equalizer ${active ? 'eq-active' : ''}`}>{Array.from({ length: 40 }).map((_, i) => <i key={i} style={{ '--i': i } as React.CSSProperties} />)}</div>
 }
 
 function MiniGame() {
@@ -145,13 +196,104 @@ function MiniGame() {
 
 export default function Portfolio() {
   const [active, setActive] = useState('')
-  const [music, setMusic] = useState(false)
-  const [playing, setPlaying] = useState(true)
+  const [loadingFinished, setLoadingFinished] = useState(false)
+  const [audioEnabled, setAudioEnabled] = useState(false)
+  const [audioPlaying, setAudioPlaying] = useState(false)
+  const [audioCurrentTime, setAudioCurrentTime] = useState(0)
+  const [audioDuration, setAudioDuration] = useState(0)
+  const [audioError, setAudioError] = useState<string | null>(null)
   const [imagesReady, setImagesReady] = useState(false)
   const [selectedProject, setSelectedProject] = useState<(typeof projects)[number] | null>(null)
+  const [demoLinksOpen, setDemoLinksOpen] = useState(false)
   const panelRefs = useRef<Array<HTMLElement | null>>([])
   const projectDialogRef = useRef<HTMLDialogElement>(null)
+  const demoLinksDialogRef = useRef<HTMLDialogElement>(null)
+  const audioRef = useRef<HTMLAudioElement>(null)
+  const audioRequestRef = useRef(0)
   const lenisRef = useRef<Lenis | null>(null)
+  const homeReady = loadingFinished && imagesReady
+
+  useEffect(() => {
+    const audio = audioRef.current
+    if (!audio) return
+
+    if (audio.readyState >= HTMLMediaElement.HAVE_METADATA && Number.isFinite(audio.duration)) {
+      setAudioDuration(audio.duration)
+    } else {
+      audio.load()
+    }
+  }, [])
+
+  const playAudio = useCallback((muted: boolean) => {
+    const audio = audioRef.current
+    if (!audio) return
+
+    const request = ++audioRequestRef.current
+    setAudioEnabled(true)
+    audio.muted = muted
+    setAudioError(null)
+    void audio.play().catch((error: unknown) => {
+      if (request !== audioRequestRef.current) return
+      console.error('Unable to play the audio track.', error)
+      setAudioEnabled(false)
+      setAudioPlaying(false)
+      setAudioError('Unable to play the audio track.')
+      audio.pause()
+    })
+  }, [])
+
+  const toggleAudio = useCallback(() => {
+    const audio = audioRef.current
+    if (!audio) return
+
+    if (audioEnabled) {
+      audioRequestRef.current += 1
+      setAudioEnabled(false)
+      audio.pause()
+    } else {
+      playAudio(false)
+    }
+  }, [audioEnabled, playAudio])
+
+  const setAudioFromLoading = useCallback((playing: boolean) => {
+    setAudioEnabled(playing)
+    const audio = audioRef.current
+    if (!audio) return
+
+    if (playing) {
+      if (audio.paused) playAudio(true)
+      audio.muted = !homeReady
+    } else {
+      audioRequestRef.current += 1
+      audio.pause()
+    }
+  }, [homeReady, playAudio])
+
+  const handleLoadingComplete = useCallback(() => setLoadingFinished(true), [])
+
+  const seekAudio = useCallback((time: number) => {
+    const audio = audioRef.current
+    if (!audio || !Number.isFinite(time) || !Number.isFinite(audio.duration)) return
+
+    const seekTime = Math.min(Math.max(time, 0), audio.duration)
+    audio.currentTime = seekTime
+    setAudioCurrentTime(seekTime)
+  }, [])
+
+  useEffect(() => {
+    const audio = audioRef.current
+    if (!audio) return
+
+    audio.muted = !homeReady
+    if (homeReady && audioEnabled) {
+      if (audio.paused) {
+        playAudio(false)
+      } else {
+        audio.currentTime = 0
+        setAudioCurrentTime(0)
+      }
+    }
+  }, [audioEnabled, homeReady, playAudio])
 
   useEffect(() => {
     const dialog = projectDialogRef.current
@@ -160,6 +302,14 @@ export default function Portfolio() {
     if (selectedProject && !dialog.open) dialog.showModal()
     if (!selectedProject && dialog.open) dialog.close()
   }, [selectedProject])
+
+  useEffect(() => {
+    const dialog = demoLinksDialogRef.current
+    if (!dialog) return
+
+    if (demoLinksOpen && !dialog.open) dialog.showModal()
+    if (!demoLinksOpen && dialog.open) dialog.close()
+  }, [demoLinksOpen])
 
   useEffect(() => {
     if (!selectedProject) return
@@ -173,6 +323,19 @@ export default function Portfolio() {
       lenisRef.current?.start()
     }
   }, [selectedProject])
+
+  useEffect(() => {
+    if (!demoLinksOpen) return
+
+    const previousOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    lenisRef.current?.stop()
+
+    return () => {
+      document.body.style.overflow = previousOverflow
+      lenisRef.current?.start()
+    }
+  }, [demoLinksOpen])
 
   useEffect(() => {
     const preload = (src: string) => new Promise<void>((resolve) => {
@@ -266,7 +429,35 @@ export default function Portfolio() {
   }, [])
 
   return <main className="portfolio">
-    <Nav active={active} setActive={setActive} music={music} playing={playing} setMusic={setMusic} />
+    <LoadingBridge
+      visible={!homeReady}
+      audioOn={audioEnabled}
+      onAudioRequest={setAudioFromLoading}
+      onComplete={handleLoadingComplete}
+    />
+    <audio
+      ref={audioRef}
+      src="/kiravale-guitar-music-593674.mp3"
+      muted={!homeReady}
+      preload="metadata"
+      loop
+      onPlay={() => { setAudioPlaying(true); setAudioError(null) }}
+      onPause={(event) => {
+        if (event.currentTarget.paused) {
+          setAudioPlaying(false)
+          setAudioEnabled(false)
+        }
+      }}
+      onEnded={() => { setAudioPlaying(false); setAudioEnabled(false) }}
+      onTimeUpdate={(event) => setAudioCurrentTime(event.currentTarget.currentTime)}
+      onLoadedMetadata={(event) => setAudioDuration(event.currentTarget.duration)}
+      onDurationChange={(event) => {
+        const duration = event.currentTarget.duration
+        if (Number.isFinite(duration)) setAudioDuration(duration)
+      }}
+      onError={() => { setAudioPlaying(false); setAudioEnabled(false); setAudioError('Unable to load the audio track.') }}
+    />
+    <Nav active={active} setActive={setActive} playing={audioEnabled} toggleAudio={toggleAudio} />
     <section ref={(node) => { panelRefs.current[0] = node }} className="hero panel hero-panel" id="top">
       <div className="hero-copy">
         <div className="eyebrow"><span>01</span> creative developer / athlete / musician</div>
@@ -275,7 +466,7 @@ export default function Portfolio() {
         <button type="button" className="enter-link" onClick={() => scrollToSection('projects')}><span className="enter-icon"><ArrowUpRight size={18} /></span> ENTER EXPERIENCE</button>
         <div className="scroll-cue"><span /> scroll to explore</div>
       </div>
-      <div className="hero-scene"><AvatarScene music={music} ready={imagesReady} /><div className="vertical-type">SELECTED WORK / 2023—24</div></div>
+      <div className="hero-scene"><AvatarScene music={audioEnabled} ready={imagesReady} /><div className="vertical-type">SELECTED WORK / 2023—24</div></div>
     </section>
 
     <section ref={(node) => { panelRefs.current[1] = node }} className="about panel about-panel" id="about">
@@ -285,13 +476,13 @@ export default function Portfolio() {
     </section>
 
     <section ref={(node) => { panelRefs.current[2] = node }} className="projects panel projects-panel" id="projects">
-      <div className="section-heading"><div><div className="section-kicker">03 — SELECTED WORK</div><h2>IN <em>ROTATION.</em></h2></div><a className="projects-demo-pill" href="/demos">DEMO ROOM</a></div>
+      <div className="section-heading"><div><div className="section-kicker">03 — SELECTED WORK</div><h2>IN <em>ROTATION.</em></h2></div><button type="button" className="projects-demo-pill" onClick={() => setDemoLinksOpen(true)}>DEMO ROOM</button></div>
       <div className="project-list">{projects.map((project) => <button type="button" className={`project-card ${project.color}`} key={project.number} onClick={() => setSelectedProject(project)}><div className="project-meta"><span>{project.number}</span><span>{project.type}</span><span>{project.year}</span></div><div className="project-art"><div className="art-ring" /><div className="art-word">{project.title}</div></div><div className="project-bottom"><h3>{project.title}</h3><p>{project.desc}</p></div></button>)}</div>
     </section>
 
     <section ref={(node) => { panelRefs.current[3] = node }} className="contact panel contact-panel" id="contact">
       <div className="contact-top"><div className="section-kicker">04 — OPEN CHANNEL</div><div className="signal">● signal is strong</div></div>
-      <div className="contact-grid"><div><h2>LET&apos;S MAKE<br /><em>SOMETHING</em><br />UNEXPECTED.</h2><a className="email-link" href="mailto:hello@alexarivera.studio">hello@alexarivera.studio <ArrowUpRight size={18} /></a></div><div className="audio-card"><div className="audio-card-top"><span><Music2 size={15} /> CURRENTLY PLAYING</span><span>00:42 / 03:18</span></div><div className="track-title">Late Bloomer <small>— Alexa Rivera</small></div><Equalizer active={music && playing} /><div className="audio-controls"><button type="button" onClick={() => setPlaying(!playing)} aria-label="Play or pause track" aria-pressed={playing}>{playing ? <Pause size={17} /> : <Play size={17} />}</button><div className="track-line"><span /></div></div></div></div>
+      <div className="contact-grid"><div><h2>LET&apos;S MAKE<br /><em>SOMETHING</em><br />UNEXPECTED.</h2><a className="email-link" href="mailto:hello@alexarivera.studio">hello@alexarivera.studio <ArrowUpRight size={18} /></a></div><div className="audio-card"><div className="audio-card-top"><span><Music2 size={15} /> CURRENTLY PLAYING</span><span>{formatTime(audioCurrentTime)} / {formatTime(audioDuration)}</span></div><div className="track-title">Late Bloomer <small>— Alexa Rivera</small></div><Equalizer active={audioPlaying} /><div className="audio-controls"><button type="button" onClick={toggleAudio} aria-label={audioEnabled ? 'Pause track' : 'Play track'} aria-pressed={audioEnabled}>{audioEnabled ? <Pause size={17} /> : <Play size={17} />}</button><input className="track-seek" type="range" min="0" max={audioDuration || 0} step="0.1" value={audioDuration ? Math.min(audioCurrentTime, audioDuration) : 0} onInput={(event) => seekAudio(event.currentTarget.valueAsNumber)} onChange={(event) => seekAudio(event.currentTarget.valueAsNumber)} aria-label="Seek through track" aria-valuetext={`${formatTime(audioCurrentTime)} of ${formatTime(audioDuration)}`} disabled={!Number.isFinite(audioDuration) || audioDuration <= 0} style={{ '--seek-progress': `${audioDuration ? (audioCurrentTime / audioDuration) * 100 : 0}%` } as React.CSSProperties} /></div>{audioError && <p className="audio-error" role="status">{audioError}</p>}</div></div>
     </section>
     <section className="page-end" aria-label="End of page">
       <MiniGame />
@@ -300,6 +491,30 @@ export default function Portfolio() {
     <dialog ref={projectDialogRef} className="project-dialog" aria-label="Project preview" onClose={() => setSelectedProject(null)} onClick={(event) => { if (event.target === event.currentTarget) event.currentTarget.close() }}>
       <div className="project-dialog-content">
         {selectedProject && <iframe key={selectedProject.src} src={selectedProject.src} title={selectedProject.title} />}
+      </div>
+    </dialog>
+    <dialog ref={demoLinksDialogRef} className="project-dialog demo-links-dialog" aria-label="Demo project links" onClose={() => setDemoLinksOpen(false)} onClick={(event) => { if (event.target === event.currentTarget) event.currentTarget.close() }}>
+      <div className="demo-links-dialog-content">
+        <header className="demo-links-dialog-header">
+          <div>
+            <span>{demoLinks.length} PROJECTS / OPEN TO EXPLORE</span>
+            <h2>PROJECT INDEX</h2>
+            <p>A collection of live experiments and ideas. Choose a link to explore.</p>
+          </div>
+          <button type="button" onClick={() => setDemoLinksOpen(false)} aria-label="Close demo links"><X size={20} /></button>
+        </header>
+        <ol className="demo-modal-link-list" data-lenis-prevent>
+          {demoLinks.map((url) => {
+            const label = url.replace(/^https?:\/\//, '').replace(/\/$/, '')
+
+            return <li key={url}>
+              <a href={url} target="_blank" rel="noreferrer">
+                <span>{label}</span>
+                <ArrowUpRight size={17} aria-hidden="true" />
+              </a>
+            </li>
+          })}
+        </ol>
       </div>
     </dialog>
   </main>
